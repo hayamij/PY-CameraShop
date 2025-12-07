@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Thêm Sản phẩm Mới - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card h5 {
+        color: #667eea;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .required:after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .btn-submit {
+        background-color: #667eea;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    
+    .btn-submit:hover {
+        background-color: #5568d3;
+    }
+    
+    .image-preview {
+        max-width: 200px;
+        margin-top: 0.5rem;
+        border-radius: 4px;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <h1>➕ Thêm Sản phẩm Mới</h1>
+        <p>Điền thông tin chi tiết sản phẩm</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('admin_products.create_product') }}">
+            <h5>Thông tin Sản phẩm</h5>
+            
+            <!-- Product Name -->
+            <div class="form-group">
+                <label for="name" class="required">Tên sản phẩm</label>
+                <input type="text" class="form-control" id="name" name="name" 
+                       placeholder="VD: Canon EOS R5" required>
+            </div>
+            
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description" class="required">Mô tả</label>
+                <textarea class="form-control" id="description" name="description" 
+                          rows="5" placeholder="Mô tả chi tiết sản phẩm..." required></textarea>
+            </div>
+            
+            <div class="row">
+                <!-- Price -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="price" class="required">Giá (VNĐ)</label>
+                        <input type="number" class="form-control" id="price" name="price" 
+                               placeholder="0" min="0" step="1000" required>
+                    </div>
+                </div>
+                
+                <!-- Stock Quantity -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="stock_quantity" class="required">Số lượng tồn kho</label>
+                        <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" 
+                               placeholder="0" min="0" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Category -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="category_id" class="required">Danh mục</label>
+                        <select class="form-control" id="category_id" name="category_id" required>
+                            <option value="">-- Chọn danh mục --</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Brand -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="brand_id" class="required">Thương hiệu</label>
+                        <select class="form-control" id="brand_id" name="brand_id" required>
+                            <option value="">-- Chọn thương hiệu --</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Image URL -->
+            <div class="form-group">
+                <label for="image_url">URL Hình ảnh</label>
+                <input type="url" class="form-control" id="image_url" name="image_url" 
+                       placeholder="https://example.com/image.jpg"
+                       onchange="previewImage(this.value)">
+                <small class="form-text text-muted">
+                    Để trống để sử dụng hình ảnh mặc định
+                </small>
+                <img id="image_preview" class="image-preview" alt="Preview">
+            </div>
+            
+            <!-- Visibility -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="is_visible" name="is_visible" checked>
+                    <label class="form-check-label" for="is_visible">
+                        Hiển thị sản phẩm trên website
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Submit Buttons -->
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-submit">💾 Lưu sản phẩm</button>
+                <a href="{{ url_for('admin_products.list_products') }}" class="btn btn-secondary">
+                    ← Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(url) {
+    const preview = document.getElementById('image_preview');
+    if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        preview.onerror = function() {
+            this.style.display = 'none';
+            alert('Không thể tải hình ảnh. Vui lòng kiểm tra URL.');
+        };
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

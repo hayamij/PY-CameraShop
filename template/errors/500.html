@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Lỗi máy chủ{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1 class="display-1 text-danger">500</h1>
+                <h2 class="mb-4">Lỗi máy chủ nội bộ</h2>
+                <div class="error-details mb-4">
+                    <i class="fas fa-server fa-3x text-danger mb-3"></i>
+                    <p class="lead">Xin lỗi, đã xảy ra lỗi khi xử lý yêu cầu của bạn.</p>
+                    <p>Chúng tôi đã ghi nhận lỗi và sẽ khắc phục sớm nhất có thể.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-home"></i> Về trang chủ
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+                <div class="mt-4">
+                    <p class="text-muted">
+                        <small>Nếu lỗi vẫn tiếp diễn, vui lòng liên hệ với chúng tôi.</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+.error-template h1 {
+    font-size: 8rem;
+    font-weight: bold;
+}
+.error-details {
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

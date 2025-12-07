@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Không tìm thấy trang{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1 class="display-1 text-primary">404</h1>
+                <h2 class="mb-4">Oops! Không tìm thấy trang</h2>
+                <div class="error-details mb-4">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <p class="lead">Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-home"></i> Về trang chủ
+                    </a>
+                    <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-shopping-bag"></i> Xem sản phẩm
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+.error-template h1 {
+    font-size: 8rem;
+    font-weight: bold;
+}
+.error-details {
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

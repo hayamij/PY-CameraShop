@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Chi tiết Đơn hàng #{{ output.order_id }} - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-card h5 {
+        color: #667eea;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+    
+    .info-value {
+        color: #212529;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-shipping {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+    
+    .status-completed {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    
+    .status-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-status {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-status:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .btn-shipping {
+        background-color: #0dcaf0;
+        color: white;
+    }
+    
+    .btn-complete {
+        background-color: #198754;
+        color: white;
+    }
+    
+    .btn-cancel {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .items-table th {
+        background-color: #f8f9fa;
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .items-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .totals {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #667eea;
+    }
+    
+    .totals .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+    }
+    
+    .total-final {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <h1>Chi tiết Đơn hàng #{{ output.order_id }}</h1>
+        <p>Thông tin chi tiết và quản lý trạng thái đơn hàng</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Order Info -->
+        <div class="col-md-6">
+            <div class="detail-card">
+                <h5>Thông tin đơn hàng</h5>
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng:</span>
+                    <span class="info-value">#{{ output.order_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Ngày đặt:</span>
+                    <span class="info-value">{{ output.order_date.strftime('%d/%m/%Y %H:%M') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Trạng thái:</span>
+                    <span class="info-value">
+                        {% if output.status == 'CHO_XAC_NHAN' %}
+                        <span class="status-badge status-pending">Chờ xác nhận</span>
+                        {% elif output.status == 'DANG_GIAO' %}
+                        <span class="status-badge status-shipping">Đang giao</span>
+                        {% elif output.status == 'HOAN_THANH' %}
+                        <span class="status-badge status-completed">Hoàn thành</span>
+                        {% elif output.status == 'DA_HUY' %}
+                        <span class="status-badge status-cancelled">Đã hủy</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phương thức thanh toán:</span>
+                    <span class="info-value">
+                        {% if output.payment_method == 'TIEN_MAT' %}
+                        Tiền mặt khi nhận hàng
+                        {% elif output.payment_method == 'CHUYEN_KHOAN' %}
+                        Chuyển khoản ngân hàng
+                        {% elif output.payment_method == 'THE' %}
+                        Thẻ ngân hàng
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Customer Info -->
+            <div class="detail-card">
+                <h5>Thông tin khách hàng</h5>
+                <div class="info-row">
+                    <span class="info-label">Họ tên:</span>
+                    <span class="info-value">{{ output.customer_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ output.customer_email }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Số điện thoại:</span>
+                    <span class="info-value">{{ output.customer_phone }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shipping Info & Status Actions -->
+        <div class="col-md-6">
+            <div class="detail-card">
+                <h5>Địa chỉ giao hàng</h5>
+                <p>{{ output.shipping_address }}</p>
+            </div>
+            
+            <!-- Status Update Actions -->
+            <div class="detail-card">
+                <h5>Cập nhật trạng thái</h5>
+                <p class="text-muted">Trạng thái hiện tại: 
+                    {% if output.status == 'CHO_XAC_NHAN' %}
+                    <strong>Chờ xác nhận</strong>
+                    {% elif output.status == 'DANG_GIAO' %}
+                    <strong>Đang giao</strong>
+                    {% elif output.status == 'HOAN_THANH' %}
+                    <strong>Hoàn thành</strong>
+                    {% elif output.status == 'DA_HUY' %}
+                    <strong>Đã hủy</strong>
+                    {% endif %}
+                </p>
+                
+                <div class="status-actions">
+                    {% if output.status == 'CHO_XAC_NHAN' %}
+                    <form method="POST" action="{{ url_for('admin_orders.update_status', order_id=output.order_id) }}" style="display: inline;">
+                        <input type="hidden" name="new_status" value="DANG_GIAO">
+                        <button type="submit" class="btn-status btn-shipping">Xác nhận & Giao hàng</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin_orders.update_status', order_id=output.order_id) }}" style="display: inline;">
+                        <input type="hidden" name="new_status" value="DA_HUY">
+                        <button type="submit" class="btn-status btn-cancel" onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">Hủy đơn</button>
+                    </form>
+                    {% elif output.status == 'DANG_GIAO' %}
+                    <form method="POST" action="{{ url_for('admin_orders.update_status', order_id=output.order_id) }}" style="display: inline;">
+                        <input type="hidden" name="new_status" value="HOAN_THANH">
+                        <button type="submit" class="btn-status btn-complete">Hoàn thành giao hàng</button>
+                    </form>
+                    {% elif output.status == 'HOAN_THANH' %}
+                    <p class="text-success">Đơn hàng đã hoàn thành ✓</p>
+                    {% elif output.status == 'DA_HUY' %}
+                    <p class="text-danger">Đơn hàng đã bị hủy ✗</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order Items -->
+    <div class="detail-card">
+        <h5>Sản phẩm đã đặt</h5>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Đơn giá</th>
+                    <th>Số lượng</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in output.items %}
+                <tr>
+                    <td>
+                        <strong>{{ item.product_name }}</strong><br>
+                        <small class="text-muted">Mã SP: #{{ item.product_id }}</small>
+                    </td>
+                    <td>{{ "{:,.0f}".format(item.unit_price) }} ₫</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ "{:,.0f}".format(item.subtotal) }} ₫</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Totals -->
+        <div class="totals">
+            <div class="row">
+                <span class="info-label">Tạm tính:</span>
+                <span class="info-value">{{ "{:,.0f}".format(output.subtotal) }} ₫</span>
+            </div>
+            <div class="row">
+                <span class="info-label">Thuế (10%):</span>
+                <span class="info-value">{{ "{:,.0f}".format(output.tax) }} ₫</span>
+            </div>
+            <div class="row">
+                <span class="info-label">Phí vận chuyển:</span>
+                <span class="info-value">{{ "{:,.0f}".format(output.shipping_fee) }} ₫</span>
+            </div>
+            <div class="row total-final">
+                <span>Tổng cộng:</span>
+                <span>{{ "{:,.0f}".format(output.total) }} ₫</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Back button -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('admin_orders.list_orders') }}" class="btn btn-secondary">← Quay lại danh sách</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-hide flash messages after 3 seconds
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 3000);
+</script>
+{% endblock %}

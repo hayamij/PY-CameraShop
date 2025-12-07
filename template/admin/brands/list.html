@@ -1,0 +1,142 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Quản lý Thương hiệu - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">🏷️ Quản lý Thương hiệu</h2>
+            <p class="text-muted mb-0">Danh sách các thương hiệu sản phẩm</p>
+        </div>
+        <a href="{{ url_for('admin_brands.create_brand') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Thêm Thương hiệu
+        </a>
+    </div>
+
+    <!-- Brands Table -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 8%;">ID</th>
+                            <th style="width: 10%;">Logo</th>
+                            <th style="width: 25%;">Tên Thương hiệu</th>
+                            <th style="width: 37%;">Mô tả</th>
+                            <th style="width: 10%;" class="text-center">Số sản phẩm</th>
+                            <th style="width: 10%;" class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if brands %}
+                            {% for item in brands %}
+                            <tr>
+                                <td>{{ item.brand.id }}</td>
+                                <td>
+                                    {% if item.brand.logo_url %}
+                                        <img src="{{ item.brand.logo_url }}" 
+                                             alt="{{ item.brand.name }}" 
+                                             class="brand-logo"
+                                             onerror="this.src='https://via.placeholder.com/60x40?text=No+Logo'">
+                                    {% else %}
+                                        <div class="no-logo">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ item.brand.name }}</strong>
+                                </td>
+                                <td>
+                                    {% if item.brand.description %}
+                                        {{ item.brand.description[:100] }}
+                                        {% if item.brand.description|length > 100 %}...{% endif %}
+                                    {% else %}
+                                        <span class="text-muted">Chưa có mô tả</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">{{ item.product_count }} sản phẩm</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('admin_brands.edit_brand', brand_id=item.brand.id) }}" 
+                                           class="btn btn-sm btn-warning" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ url_for('admin_brands.delete_brand', brand_id=item.brand.id) }}" 
+                                              method="POST" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa thương hiệu này không?');">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-danger" 
+                                                    title="Xóa"
+                                                    {% if item.product_count > 0 %}disabled{% endif %}>
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% if item.product_count > 0 %}
+                                        <small class="d-block text-muted mt-1">
+                                            Không thể xóa (có sản phẩm)
+                                        </small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                    Chưa có thương hiệu nào
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.card {
+    border: none;
+}
+
+.brand-logo {
+    max-width: 60px;
+    max-height: 40px;
+    object-fit: contain;
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.no-logo {
+    width: 60px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    border-radius: 4px;
+    color: #adb5bd;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}403 - Truy cập bị từ chối{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1 class="display-1 text-danger">403</h1>
+                <h2 class="mb-4">Truy cập bị từ chối</h2>
+                <div class="error-details mb-4">
+                    <i class="fas fa-ban fa-3x text-danger mb-3"></i>
+                    <p class="lead">Bạn không có quyền truy cập vào trang này.</p>
+                    <p>Trang này yêu cầu quyền đặc biệt mà tài khoản của bạn không có.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-home"></i> Về trang chủ
+                    </a>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+.error-template h1 {
+    font-size: 8rem;
+    font-weight: bold;
+}
+.error-details {
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

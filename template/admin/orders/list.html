@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Quản lý Đơn hàng - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stats-card h3 {
+        font-size: 2rem;
+        margin: 0.5rem 0;
+        color: #667eea;
+    }
+    
+    .stats-card p {
+        color: #6c757d;
+        margin: 0;
+    }
+    
+    .filters-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .orders-table {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-shipping {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+    
+    .status-completed {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #667eea;
+    }
+    
+    .pagination .active {
+        background-color: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .pagination a:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-filter {
+        background-color: #667eea;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .btn-filter:hover {
+        background-color: #5568d3;
+    }
+    
+    .btn-reset {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .btn-reset:hover {
+        background-color: #5a6268;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <h1>Quản lý Đơn hàng</h1>
+        <p>Theo dõi và cập nhật trạng thái đơn hàng</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <p>Tổng doanh thu</p>
+                <h3>{{ "{:,.0f}".format(output.total_revenue) }} ₫</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <p>Chờ xác nhận</p>
+                <h3>{{ output.pending_count }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <p>Đang giao</p>
+                <h3>{{ output.shipping_count }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <p>Hoàn thành</p>
+                <h3>{{ output.completed_count }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="filters-card">
+        <h5>Bộ lọc</h5>
+        <form method="GET" action="{{ url_for('admin_orders.list_orders') }}">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>Trạng thái</label>
+                    <select name="status" class="form-control">
+                        <option value="">Tất cả</option>
+                        <option value="CHO_XAC_NHAN" {% if request.args.get('status') == 'CHO_XAC_NHAN' %}selected{% endif %}>Chờ xác nhận</option>
+                        <option value="DANG_GIAO" {% if request.args.get('status') == 'DANG_GIAO' %}selected{% endif %}>Đang giao</option>
+                        <option value="HOAN_THANH" {% if request.args.get('status') == 'HOAN_THANH' %}selected{% endif %}>Hoàn thành</option>
+                        <option value="DA_HUY" {% if request.args.get('status') == 'DA_HUY' %}selected{% endif %}>Đã hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Từ ngày</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label>Đến ngày</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label>Sắp xếp</label>
+                    <select name="sort" class="form-control">
+                        <option value="newest" {% if request.args.get('sort') == 'newest' %}selected{% endif %}>Mới nhất</option>
+                        <option value="oldest" {% if request.args.get('sort') == 'oldest' %}selected{% endif %}>Cũ nhất</option>
+                        <option value="total_asc" {% if request.args.get('sort') == 'total_asc' %}selected{% endif %}>Giá tăng dần</option>
+                        <option value="total_desc" {% if request.args.get('sort') == 'total_desc' %}selected{% endif %}>Giá giảm dần</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label>Tìm kiếm (Mã đơn, Địa chỉ giao hàng)</label>
+                    <input type="text" name="search" class="form-control" placeholder="Nhập từ khóa..." value="{{ request.args.get('search', '') }}">
+                </div>
+                <div class="col-md-6 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn-filter">Lọc</button>
+                    <a href="{{ url_for('admin_orders.list_orders') }}" class="btn-reset">Đặt lại</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Orders Table -->
+    <div class="orders-table">
+        <h5>Danh sách đơn hàng ({{ output.total_orders }} đơn)</h5>
+        
+        {% if output.orders %}
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thanh toán</th>
+                    <th>Ngày đặt</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in output.orders %}
+                <tr>
+                    <td>#{{ order.order_id }}</td>
+                    <td>
+                        {{ order.customer_name }}<br>
+                        <small class="text-muted">{{ order.customer_email }}</small>
+                    </td>
+                    <td>{{ "{:,.0f}".format(order.total_amount) }} ₫</td>
+                    <td>
+                        {% if order.status == 'CHO_XAC_NHAN' %}
+                        <span class="status-badge status-pending">Chờ xác nhận</span>
+                        {% elif order.status == 'DANG_GIAO' %}
+                        <span class="status-badge status-shipping">Đang giao</span>
+                        {% elif order.status == 'HOAN_THANH' %}
+                        <span class="status-badge status-completed">Hoàn thành</span>
+                        {% elif order.status == 'DA_HUY' %}
+                        <span class="status-badge status-cancelled">Đã hủy</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.payment_method == 'TIEN_MAT' %}
+                        Tiền mặt
+                        {% elif order.payment_method == 'CHUYEN_KHOAN' %}
+                        Chuyển khoản
+                        {% elif order.payment_method == 'THE' %}
+                        Thẻ ngân hàng
+                        {% endif %}
+                    </td>
+                    <td>{{ order.order_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_orders.order_detail', order_id=order.order_id) }}" class="btn btn-sm btn-primary">Chi tiết</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        {% if output.total_pages > 1 %}
+        <div class="pagination">
+            {% if output.page > 1 %}
+            <a href="{{ url_for('admin_orders.list_orders', page=output.page-1, status=request.args.get('status'), start_date=request.args.get('start_date'), end_date=request.args.get('end_date'), search=request.args.get('search'), sort=request.args.get('sort')) }}">&laquo; Trước</a>
+            {% endif %}
+            
+            {% for p in range(1, output.total_pages + 1) %}
+                {% if p == output.page %}
+                <span class="active">{{ p }}</span>
+                {% else %}
+                <a href="{{ url_for('admin_orders.list_orders', page=p, status=request.args.get('status'), start_date=request.args.get('start_date'), end_date=request.args.get('end_date'), search=request.args.get('search'), sort=request.args.get('sort')) }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if output.page < output.total_pages %}
+            <a href="{{ url_for('admin_orders.list_orders', page=output.page+1, status=request.args.get('status'), start_date=request.args.get('start_date'), end_date=request.args.get('end_date'), search=request.args.get('search'), sort=request.args.get('sort')) }}">Sau &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <p class="text-center text-muted">Không tìm thấy đơn hàng nào</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
