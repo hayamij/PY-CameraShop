@@ -114,7 +114,7 @@ class GetOrderDetailUseCase:
             # Get customer information
             customer = self.user_repository.find_by_id(order.customer_id)
             customer_name = customer.full_name if customer else "Unknown"
-            customer_email = customer.email if customer else ""
+            customer_email = customer.email.address if customer and customer.email else ""
             customer_phone = customer.phone_number if customer else ""
             
             # Build order items with product details

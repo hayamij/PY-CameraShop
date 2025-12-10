@@ -143,9 +143,9 @@ class TestPlaceOrderUseCase:
         # Mock saved order (order_repository.save will be called with real Order entity)
         mock_saved_order = Mock()
         mock_saved_order.id = 1
-        mock_total = Mock()
-        mock_total.amount = 10000000
-        mock_saved_order.total = mock_total
+        mock_total_amount = Mock()
+        mock_total_amount.amount = 10000000
+        mock_saved_order.total_amount = mock_total_amount  # Use total_amount, not total
         order_repository.save.return_value = mock_saved_order
         
         input_data = PlaceOrderInputData(
@@ -196,9 +196,9 @@ class TestPlaceOrderUseCase:
         
         mock_saved_order = Mock()
         mock_saved_order.id = 1
-        mock_total = Mock()
-        mock_total.amount = 14500000
-        mock_saved_order.total = mock_total
+        mock_total_amount = Mock()
+        mock_total_amount.amount = 14500000
+        mock_saved_order.total_amount = mock_total_amount
         order_repository.save.return_value = mock_saved_order
         
         input_data = PlaceOrderInputData(
@@ -232,9 +232,9 @@ class TestPlaceOrderUseCase:
         
         mock_saved_order = Mock()
         mock_saved_order.id = 1
-        mock_total = Mock()
-        mock_total.amount = 25000000
-        mock_saved_order.total = mock_total
+        mock_total_amount = Mock()
+        mock_total_amount.amount = 25000000
+        mock_saved_order.total_amount = mock_total_amount
         order_repository.save.return_value = mock_saved_order
         
         input_data = PlaceOrderInputData(
@@ -266,9 +266,9 @@ class TestPlaceOrderUseCase:
         
         mock_saved_order = Mock()
         mock_saved_order.id = 1
-        mock_total = Mock()
-        mock_total.amount = 5000000
-        mock_saved_order.total = mock_total
+        mock_total_amount = Mock()
+        mock_total_amount.amount = 5000000
+        mock_saved_order.total_amount = mock_total_amount
         order_repository.save.return_value = mock_saved_order
         
         # Valid payment methods: CASH, BANK_TRANSFER, CREDIT_CARD
@@ -729,9 +729,9 @@ class TestPlaceOrderUseCase:
         
         mock_saved_order = Mock()
         mock_saved_order.id = 123
-        mock_total = Mock()
-        mock_total.amount = 5000000
-        mock_saved_order.total = mock_total
+        mock_total_amount = Mock()
+        mock_total_amount.amount = 5000000
+        mock_saved_order.total_amount = mock_total_amount
         order_repository.save.return_value = mock_saved_order
         
         input_data = PlaceOrderInputData(

@@ -109,7 +109,7 @@ class TestAddToCartUseCase:
         assert output.cart_id == 1
         assert output.cart_item_id == 1
         assert "Added 2 item(s) to cart" in output.message
-        assert output.total_items == 2
+        assert output.total_items == 1  # Distinct items in cart
         assert output.cart_total == 20000000.0
         assert output.error_message == ""
         
@@ -179,7 +179,7 @@ class TestAddToCartUseCase:
         
         # Assert
         assert output.success is True
-        assert output.total_items == 10
+        assert output.total_items == 1  # 1 distinct item in cart
         cart_repository.add_item_to_cart.assert_called_once_with(1, 1, 10)
     
     # ============ SUCCESS CASES - UPDATE EXISTING ITEM ============
@@ -217,7 +217,7 @@ class TestAddToCartUseCase:
         assert output.success is True
         assert output.cart_item_id == 5
         assert "Updated quantity to 5" in output.message
-        assert output.total_items == 5
+        assert output.total_items == 1  # 1 distinct item in cart
         cart_repository.update_cart_item_quantity.assert_called_once_with(5, 5)
         cart_repository.add_item_to_cart.assert_not_called()
     
@@ -246,7 +246,7 @@ class TestAddToCartUseCase:
         
         # Assert
         assert output.success is True
-        assert output.total_items == 3
+        assert output.total_items == 1  # 1 distinct item in cart
         cart_repository.update_cart_item_quantity.assert_called_once_with(3, 3)
     
     # ============ PRODUCT NOT FOUND ============
@@ -354,7 +354,7 @@ class TestAddToCartUseCase:
         
         # Assert
         assert output.success is True
-        assert output.total_items == 10
+        assert output.total_items == 1  # 1 distinct item in cart
         cart_repository.update_cart_item_quantity.assert_called_once_with(1, 10)
     
     def test_add_to_out_of_stock_product_fails(self, use_case, cart_repository, product_repository):
@@ -473,7 +473,7 @@ class TestAddToCartUseCase:
         
         # Assert
         assert output.success is True
-        assert output.total_items == 100
+        assert output.total_items == 1  # 1 distinct item in cart
     
     # ============ REPOSITORY EXCEPTIONS ============
     

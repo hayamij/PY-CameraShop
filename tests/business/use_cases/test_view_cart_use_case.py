@@ -13,6 +13,7 @@ from app.business.use_cases.view_cart_use_case import (
     CartItemOutputData
 )
 from app.domain.exceptions import ValidationException
+from app.domain.value_objects.money import Money
 
 
 class TestViewCartUseCase:
@@ -39,8 +40,7 @@ class TestViewCartUseCase:
         product.id = product_id
         product.product_id = product_id
         product.name = name
-        product.price = Decimal(str(price))
-        product.currency = "VND"
+        product.price = Money(Decimal(str(price)))  # Use Money value object
         product.stock_quantity = stock
         product.is_visible = is_visible
         product.image_url = image_url
@@ -58,6 +58,7 @@ class TestViewCartUseCase:
     def create_mock_cart(self, cart_id, user_id, items=None):
         """Helper tạo mock cart"""
         cart = Mock()
+        cart.id = cart_id  # Cart entity uses .id
         cart.cart_id = cart_id
         cart.user_id = user_id
         cart.items = items or []

@@ -55,8 +55,8 @@ class TestGetMyOrdersUseCase:
         order.notes = "Test notes"
         order.created_at = datetime(2025, 12, 1, 10, 30, 0)
         
-        # CRITICAL: Use real Money object
-        order.total = Money(Decimal(str(total_amount)), "VND")
+        # CRITICAL: Use real Money object with total_amount property
+        order.total_amount = Money(Decimal(str(total_amount)), "VND")
         
         # Create mock items
         items = []

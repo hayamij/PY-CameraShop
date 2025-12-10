@@ -65,14 +65,14 @@ class TestGetOrderDetailUseCase:
         order.order_date = datetime(2025, 12, 1, 10, 30, 0)  # Implementation uses order_date
         order.created_at = datetime(2025, 12, 1, 10, 30, 0)
         
-        # Create order items with real Money
+        # Create order items with real Money objects
         items = []
         for i in range(item_count):
             item = Mock()
             item.product_id = i + 1
             item.product_name = f"Product {i + 1}"
             item.quantity = 2
-            item.unit_price = 1000000  # Implementation uses float
+            item.unit_price = Money(Decimal("1000000"), "VND")  # Use Money object
             items.append(item)
         
         order.items = items
@@ -80,10 +80,11 @@ class TestGetOrderDetailUseCase:
     
     def create_mock_user(self, user_id, full_name, email, phone):
         """Create mock user"""
+        from app.domain.value_objects.email import Email
         user = Mock()
         user.id = user_id
         user.full_name = full_name
-        user.email = email
+        user.email = Email(email)  # Use real Email value object
         user.phone_number = phone
         return user
     
