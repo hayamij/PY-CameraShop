@@ -110,7 +110,7 @@ class TestListUsersUseCase:
         # Arrange
         mock_user_repository.find_all_with_filters.return_value = (sample_users, len(sample_users))
         mock_user_repository.count_by_role.side_effect = lambda role: sum(
-            1 for u in sample_users if u.role == role
+            1 for u in sample_users if u.role.value == role
         )
         mock_user_repository.count_active_users.return_value = sum(
             1 for u in sample_users if u.is_active
@@ -426,7 +426,7 @@ class TestListUsersUseCase:
         active = sum(1 for u in sample_users if u.is_active)
         
         mock_user_repository.count_by_role.side_effect = lambda role: (
-            admins if role == UserRole.ADMIN else customers
+            admins if role == 'ADMIN' else customers
         )
         mock_user_repository.count_active_users.return_value = active
         

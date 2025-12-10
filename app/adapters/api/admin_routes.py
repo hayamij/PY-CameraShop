@@ -122,7 +122,7 @@ def create_admin_routes(
             role_filter = request.args.get('role', type=str)
             active_filter = request.args.get('active', type=str)
             search_query = request.args.get('search', '', type=str)
-            sort_by = request.args.get('sort_by', 'created_at_desc', type=str)
+            sort_by = request.args.get('sort_by', 'newest', type=str)  # Use valid default: newest, oldest, name_asc, name_desc
             
             # Convert active_filter string to boolean
             active_bool = None

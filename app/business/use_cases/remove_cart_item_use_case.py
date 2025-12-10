@@ -49,7 +49,7 @@ class RemoveCartItemUseCase:
             
             # Verify cart belongs to user
             cart = self.cart_repository.find_by_user_id(input_data.user_id)
-            if not cart or cart.cart_id != cart_item.cart_id:
+            if not cart or cart.id != cart_item.cart_id:
                 raise ValidationException("This cart item does not belong to you")
             
             # Remove item

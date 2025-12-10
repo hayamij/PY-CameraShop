@@ -63,13 +63,15 @@ def register():
         400: {"success": false, "error": "message"}
     """
     try:
-        # Debug: Check repository session
-        print(f"DEBUG Register: Repository session = {_user_repository._session}")
-        print(f"DEBUG Register: Session bind = {_user_repository._session.bind}")
-        print(f"DEBUG Register: DB URL = {_user_repository._session.bind.url}")
-        
         # Parse request JSON
         data = request.get_json()
+        
+        # Check if JSON data exists
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Request body must be JSON'
+            }), 400
         
         # Validate required fields
         required_fields = ['username', 'email', 'password', 'full_name']
@@ -134,11 +136,6 @@ def login():
         401: {"success": false, "error": "message"}
     """
     try:
-        # Debug: Check repository session
-        print(f"DEBUG Login: Repository session = {_user_repository._session}")
-        print(f"DEBUG Login: Session bind = {_user_repository._session.bind}")
-        print(f"DEBUG Login: DB URL = {_user_repository._session.bind.url}")
-        
         # Parse request JSON
         data = request.get_json()
         

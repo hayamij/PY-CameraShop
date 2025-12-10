@@ -3,8 +3,7 @@ Infrastructure Layer - Database Configuration
 Manages database connection and session lifecycle
 """
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 import os
 
 # Create declarative base for ORM models

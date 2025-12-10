@@ -260,6 +260,8 @@ class TestUpdateCartItemEndpoint:
         response = client.put(f'/api/cart/items/{cart_item.cart_item_id}', json={
             'quantity': 5
         })
+        if response.status_code != 200:
+            print(f"Cart update error: {response.get_json()}")
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] is True

@@ -4,6 +4,7 @@ Clean Architecture - Business Layer
 """
 from typing import Optional, List
 from datetime import datetime
+from decimal import Decimal
 from app.business.ports.order_repository import IOrderRepository
 from app.business.ports.user_repository import IUserRepository
 from app.business.ports.product_repository import IProductRepository
@@ -128,7 +129,7 @@ class GetOrderDetailUseCase:
                 
                 # Extract amount from Money object
                 unit_price_amount = item.unit_price.amount
-                item_subtotal = unit_price_amount * item.quantity
+                item_subtotal = unit_price_amount * Decimal(str(item.quantity))
                 subtotal += item_subtotal
                 
                 order_items.append(OrderDetailItemData(
@@ -141,8 +142,8 @@ class GetOrderDetailUseCase:
                 ))
             
             # Calculate totals (assuming business rules: 10% tax, $20 shipping)
-            tax = subtotal * 0.10
-            shipping_fee = 20.0 if subtotal < 500 else 0
+            tax = subtotal * Decimal("0.10")
+            shipping_fee = Decimal("20.0") if subtotal < 500 else Decimal("0")
             total = subtotal + tax + shipping_fee
             
             return GetOrderDetailOutputData(

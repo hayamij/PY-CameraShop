@@ -38,9 +38,11 @@ def regular_user(clean_db):
     """Create regular user for permission testing"""
     from app.infrastructure.database.models.user_model import UserModel, RoleModel
     
-    user_role = clean_db.query(RoleModel).filter_by(role_name='USER').first()
+    user_role = clean_db.query(RoleModel).filter_by(role_name='CUSTOMER').first()
     if not user_role:
-        raise RuntimeError("USER role not found")
+        user_role = clean_db.query(RoleModel).filter_by(role_name='USER').first()
+    if not user_role:
+        raise RuntimeError("CUSTOMER/USER role not found")
     
     user = UserModel(
         username='regular_test',
@@ -113,11 +115,12 @@ def sample_product(clean_db, sample_brand, sample_category):
     from app.infrastructure.database.models.product_model import ProductModel
     product = ProductModel(
         name=f'TestProduct_{uuid.uuid4().hex[:8]}',
-        description='Test Product',
+        description='Test Product Description',
         price=1000.00,
         stock_quantity=10,
         brand_id=sample_brand.brand_id,
         category_id=sample_category.category_id,
+        image_url='test.jpg',
         is_visible=True
     )
     clean_db.add(product)
@@ -139,8 +142,9 @@ class TestAdminUserManagement:
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] is True
-        assert 'users' in data
-        assert len(data['users']) >= 2  # Admin + regular user
+        assert 'data' in data
+        assert 'users' in data['data']
+        assert len(data['data']['users']) >= 2  # Admin + regular user
     
     def test_list_users_with_pagination(self, client, logged_in_admin):
         """TC2: List users with pagination parameters"""
@@ -148,7 +152,8 @@ class TestAdminUserManagement:
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] is True
-        assert 'users' in data
+        assert 'data' in data
+        assert 'users' in data['data']
     
     def test_list_users_unauthorized(self, client, logged_in_regular_user):
         """TC3: Regular user cannot list users"""
@@ -165,11 +170,12 @@ class TestAdminUserManagement:
     
     def test_search_users_success(self, client, logged_in_admin, regular_user):
         """TC5: Search users by keyword"""
-        response = client.get(f'/api/admin/users/search?keyword={regular_user.username}')
+        response = client.get(f'/api/admin/users/search?q={regular_user.username}')
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] is True
-        assert 'users' in data
+        assert 'data' in data
+        assert 'results' in data['data']
     
     def test_search_users_unauthorized(self, client, logged_in_regular_user):
         """TC6: Regular user cannot search users"""
@@ -186,12 +192,13 @@ class TestAdminUserManagement:
             'full_name': 'New User',
             'phone_number': '0123456789',
             'address': 'Test Address',
-            'role': 'USER'
+            'role': 'CUSTOMER'
         })
         assert response.status_code == 201
         data = response.get_json()
         assert data['success'] is True
-        assert 'user_id' in data
+        assert 'data' in data
+        assert 'user_id' in data['data']
     
     def test_create_user_missing_fields(self, client, logged_in_admin):
         """TC8: Create user fails with missing required fields"""
@@ -215,7 +222,7 @@ class TestAdminUserManagement:
         """TC10: Admin can update user"""
         response = client.put(f'/api/admin/users/{regular_user.user_id}', json={
             'full_name': 'Updated Name',
-            'phone_number': '9999999999'
+            'phone_number': '0987654321'  # Valid Vietnamese phone
         })
         assert response.status_code == 200
         data = response.get_json()
@@ -242,13 +249,15 @@ class TestAdminUserManagement:
         from app.infrastructure.database.models.user_model import UserModel, RoleModel
         
         # Create user to delete
-        user_role = clean_db.query(RoleModel).filter_by(role_name='USER').first()
+        user_role = clean_db.query(RoleModel).filter_by(role_name='CUSTOMER').first()
+        if not user_role:
+            user_role = clean_db.query(RoleModel).filter_by(role_name='USER').first()
         user = UserModel(
             username=f'todelete_{uuid.uuid4().hex[:8]}',
             email=f'delete_{uuid.uuid4().hex[:8]}@test.com',
             password_hash='hash',
             full_name='To Delete',
-            phone_number='1111111111',
+            phone_number='0111111111',  # Valid Vietnamese phone
             address='Address',
             role_id=user_role.role_id
         )
@@ -329,8 +338,12 @@ class TestAdminProductManagement:
         """TC4: Admin can update product"""
         response = client.put(f'/api/admin/products/{sample_product.product_id}', json={
             'name': 'Updated Product Name',
-            'price': 1500.00
+            'price': 1500.00,
+            'description': 'Updated description with at least 10 characters'
         })
+        if response.status_code != 200:
+            import sys
+            print(f"ERROR: {response.get_json()}", file=sys.stderr)
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] is True

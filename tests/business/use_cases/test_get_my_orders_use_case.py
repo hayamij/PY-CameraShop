@@ -77,7 +77,7 @@ class TestGetMyOrdersUseCase:
         """Test retrieving orders when user has no orders"""
         # Arrange
         user_id = 1
-        order_repository.find_by_user_id.side_effect = lambda uid: [] if uid == user_id else None
+        order_repository.find_by_customer_id.side_effect = lambda uid: [] if uid == user_id else None
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act
@@ -88,14 +88,14 @@ class TestGetMyOrdersUseCase:
         assert output.orders == []
         assert output.total_orders == 0
         assert "0 order(s)" in output.message.lower()
-        order_repository.find_by_user_id.assert_called_once_with(user_id)
+        order_repository.find_by_customer_id.assert_called_once_with(user_id)
     
     def test_get_my_orders_single_order_success(self, use_case, order_repository):
         """Test retrieving single order"""
         # Arrange
         user_id = 1
         order = self.create_mock_order(10, user_id, OrderStatus.PENDING, item_count=2, total_amount=5000000)
-        order_repository.find_by_user_id.side_effect = lambda uid: [order] if uid == user_id else []
+        order_repository.find_by_customer_id.side_effect = lambda uid: [order] if uid == user_id else []
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act
@@ -113,7 +113,7 @@ class TestGetMyOrdersUseCase:
         assert output.orders[0].shipping_address == "123 Test Street, District 1, HCMC"
         assert output.orders[0].phone_number == "0901234567"
         assert output.orders[0].created_at == "2025-12-01 10:30:00"
-        order_repository.find_by_user_id.assert_called_once_with(user_id)
+        order_repository.find_by_customer_id.assert_called_once_with(user_id)
     
     def test_get_my_orders_multiple_orders_success(self, use_case, order_repository):
         """Test retrieving multiple orders"""
@@ -123,7 +123,7 @@ class TestGetMyOrdersUseCase:
         order2 = self.create_mock_order(11, user_id, OrderStatus.SHIPPING, item_count=3, total_amount=8000000)
         order3 = self.create_mock_order(12, user_id, OrderStatus.COMPLETED, item_count=1, total_amount=3000000)
         
-        order_repository.find_by_user_id.side_effect = lambda uid: [order1, order2, order3] if uid == user_id else []
+        order_repository.find_by_customer_id.side_effect = lambda uid: [order1, order2, order3] if uid == user_id else []
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act
@@ -162,7 +162,7 @@ class TestGetMyOrdersUseCase:
         order3 = self.create_mock_order(12, user_id, OrderStatus.PENDING)
         order3.payment_method = PaymentMethod.CREDIT_CARD
         
-        order_repository.find_by_user_id.side_effect = lambda uid: [order1, order2, order3] if uid == user_id else []
+        order_repository.find_by_customer_id.side_effect = lambda uid: [order1, order2, order3] if uid == user_id else []
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act
@@ -274,7 +274,7 @@ class TestGetMyOrdersUseCase:
             use_case.execute(input_data)
         
         assert "invalid user id" in str(exc_info.value).lower()
-        order_repository.find_by_user_id.assert_not_called()
+        order_repository.find_by_customer_id.assert_not_called()
     
     def test_get_my_orders_with_negative_user_id_fails(self, use_case, order_repository):
         """Test with negative user ID"""
@@ -286,7 +286,7 @@ class TestGetMyOrdersUseCase:
             use_case.execute(input_data)
         
         assert "invalid user id" in str(exc_info.value).lower()
-        order_repository.find_by_user_id.assert_not_called()
+        order_repository.find_by_customer_id.assert_not_called()
     
     # ============ EDGE CASES ============
     
@@ -296,7 +296,7 @@ class TestGetMyOrdersUseCase:
         user_id = 1
         order = self.create_mock_order(10, user_id, OrderStatus.PENDING, item_count=0)
         
-        order_repository.find_by_user_id.side_effect = lambda uid: [order] if uid == user_id else []
+        order_repository.find_by_customer_id.side_effect = lambda uid: [order] if uid == user_id else []
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act
@@ -312,7 +312,7 @@ class TestGetMyOrdersUseCase:
         user_id = 1
         orders = [self.create_mock_order(i, user_id, OrderStatus.PENDING) for i in range(1, 51)]
         
-        order_repository.find_by_user_id.side_effect = lambda uid: orders if uid == user_id else []
+        order_repository.find_by_customer_id.side_effect = lambda uid: orders if uid == user_id else []
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act
@@ -325,11 +325,11 @@ class TestGetMyOrdersUseCase:
     
     # ============ REPOSITORY EXCEPTION CASES ============
     
-    def test_repository_exception_find_by_user_id(self, use_case, order_repository):
-        """Test repository exception during find_by_user_id"""
+    def test_repository_exception_find_by_customer_id(self, use_case, order_repository):
+        """Test repository exception during find_by_customer_id"""
         # Arrange
         user_id = 1
-        order_repository.find_by_user_id.side_effect = Exception("Database connection error")
+        order_repository.find_by_customer_id.side_effect = Exception("Database connection error")
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act & Assert
@@ -358,7 +358,7 @@ class TestGetMyOrdersUseCase:
         # Arrange
         user_id = 1
         order = self.create_mock_order(10, user_id, OrderStatus.PENDING, item_count=3, total_amount=7500000)
-        order_repository.find_by_user_id.side_effect = lambda uid: [order] if uid == user_id else []
+        order_repository.find_by_customer_id.side_effect = lambda uid: [order] if uid == user_id else []
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act
@@ -396,7 +396,7 @@ class TestGetMyOrdersUseCase:
         """Test output structure when no orders found"""
         # Arrange
         user_id = 1
-        order_repository.find_by_user_id.side_effect = lambda uid: []
+        order_repository.find_by_customer_id.side_effect = lambda uid: []
         input_data = GetMyOrdersInputData(user_id=user_id)
         
         # Act

@@ -79,7 +79,7 @@ class GetMyOrdersUseCase:
                 input_data.status_filter
             )
         else:
-            orders = self.order_repository.find_by_user_id(input_data.user_id)
+            orders = self.order_repository.find_by_customer_id(input_data.user_id)
         
         # Convert to output data
         order_items = []

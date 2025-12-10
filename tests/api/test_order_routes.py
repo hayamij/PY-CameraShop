@@ -239,6 +239,8 @@ class TestGetMyOrdersEndpoint:
     def test_get_my_orders_success(self, client, logged_in_user, test_order_with_items):
         """TC1: Get orders successfully"""
         response = client.get('/api/orders/my-orders')
+        if response.status_code != 200:
+            print(f"Get my orders error: {response.get_json()}")
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] is True

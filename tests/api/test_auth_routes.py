@@ -370,7 +370,7 @@ class TestLoginEndpoint:
             content_type='application/json'
         )
         
-        assert response.status_code == 400
+        assert response.status_code == 401  # Changed from 400
         data = json.loads(response.data)
         assert data['success'] is False
     

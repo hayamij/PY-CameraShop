@@ -246,8 +246,8 @@ class ListUsersUseCase:
         Returns:
             Dictionary with admin count, customer count, active/inactive counts
         """
-        total_admins = self.user_repository.count_by_role(UserRole.ADMIN)
-        total_customers = self.user_repository.count_by_role(UserRole.CUSTOMER)
+        total_admins = self.user_repository.count_by_role('ADMIN')
+        total_customers = self.user_repository.count_by_role('CUSTOMER')
         active_users = self.user_repository.count_active_users()
         total_users = total_admins + total_customers
         inactive_users = total_users - active_users

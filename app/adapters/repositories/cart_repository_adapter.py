@@ -157,6 +157,37 @@ class CartRepositoryAdapter(ICartRepository):
         finally:
             session.close()
     
+    def find_cart_item_by_id(self, cart_item_id: int) -> Optional[CartItem]:
+        """
+        Find a cart item by its ID.
+        
+        Args:
+            cart_item_id: Cart item ID
+            
+        Returns:
+            CartItem if found, None otherwise
+        """
+        session = self._session or get_session()
+        try:
+            item_model = session.query(CartItemModel).filter(
+                CartItemModel.cart_item_id == cart_item_id
+            ).first()
+            
+            if not item_model:
+                return None
+            
+            return CartItem(
+                product_id=item_model.product_id,
+                quantity=item_model.quantity,
+                cart_item_id=item_model.cart_item_id,
+                cart_id=item_model.cart_id
+            )
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+    
     def add_item_to_cart(self, cart_id: int, product_id: int, quantity: int) -> CartItem:
         """
         Add a new item to the cart.

@@ -42,7 +42,7 @@ class TestRemoveCartItemUseCase:
     def create_mock_cart(self, cart_id, user_id):
         """Helper tạo mock cart"""
         cart = Mock()
-        cart.cart_id = cart_id
+        cart.id = cart_id  # Changed from cart.cart_id to cart.id
         cart.user_id = user_id
         return cart
     

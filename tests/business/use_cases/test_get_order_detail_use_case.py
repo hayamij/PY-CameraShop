@@ -62,6 +62,8 @@ class TestGetOrderDetailUseCase:
         order.status = status
         order.payment_method = PaymentMethod.CASH
         order.shipping_address = "123 Test Street, District 1, HCMC"
+        order.phone_number = "0901234567"  # Required by Order entity
+        order.notes = "Test order notes"  # Required by Order entity
         order.order_date = datetime(2025, 12, 1, 10, 30, 0)  # Implementation uses order_date
         order.created_at = datetime(2025, 12, 1, 10, 30, 0)
         
@@ -103,7 +105,7 @@ class TestGetOrderDetailUseCase:
         # Arrange
         order_id = 10
         customer_id = 5
-        
+
         order = self.create_mock_order(order_id, customer_id, OrderStatus.PENDING, item_count=2)
         user = self.create_mock_user(customer_id, "John Doe", "john@example.com", "0901234567")
         product1 = self.create_mock_product(1, "Camera A", "camera_a.jpg")
@@ -115,6 +117,10 @@ class TestGetOrderDetailUseCase:
         
         # Act
         output = use_case.execute(order_id)
+        
+        # Debug
+        if not output.success:
+            print(f"ERROR: {output.message}")
         
         # Assert
         assert output.success is True
