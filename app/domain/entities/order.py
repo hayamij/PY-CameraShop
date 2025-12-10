@@ -91,7 +91,9 @@ class Order:
         customer_id: int,
         items: List[OrderItem],
         payment_method: PaymentMethod,
-        shipping_address: str
+        shipping_address: str,
+        phone_number: str,
+        notes: Optional[str] = ""
     ):
         """
         Create a new order
@@ -101,6 +103,8 @@ class Order:
             items: List of order items
             payment_method: Payment method
             shipping_address: Shipping address
+            phone_number: Customer phone number
+            notes: Optional order notes
             
         Raises:
             EmptyOrderException: If order has no items
@@ -112,12 +116,16 @@ class Order:
             raise ValueError("Invalid customer ID")
         if not shipping_address or len(shipping_address) < 10:
             raise ValueError("Shipping address must be at least 10 characters")
+        if not phone_number or len(phone_number) < 10:
+            raise ValueError("Phone number must be at least 10 characters")
         
         self._id: Optional[int] = None
         self._customer_id = customer_id
         self._items = items.copy()  # Defensive copy
         self._payment_method = payment_method
         self._shipping_address = shipping_address.strip()
+        self._phone_number = phone_number.strip()
+        self._notes = notes.strip() if notes else ""
         self._status = OrderStatus.PENDING
         self._total_amount = self._calculate_total()
         self._created_at = datetime.now()
@@ -130,6 +138,8 @@ class Order:
         items: List[OrderItem],
         payment_method: PaymentMethod,
         shipping_address: str,
+        phone_number: str,
+        notes: str,
         status: OrderStatus,
         total_amount: Money,
         created_at: datetime,
@@ -142,6 +152,8 @@ class Order:
         order._items = items
         order._payment_method = payment_method
         order._shipping_address = shipping_address
+        order._phone_number = phone_number
+        order._notes = notes
         order._status = status
         order._total_amount = total_amount
         order._created_at = created_at
@@ -168,6 +180,14 @@ class Order:
     @property
     def shipping_address(self) -> str:
         return self._shipping_address
+    
+    @property
+    def phone_number(self) -> str:
+        return self._phone_number
+    
+    @property
+    def notes(self) -> str:
+        return self._notes
     
     @property
     def status(self) -> OrderStatus:

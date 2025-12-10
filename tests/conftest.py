@@ -225,7 +225,9 @@ def sample_order(order_repository, sample_user, sample_product):
         customer_id=sample_user.id,
         items=items,
         payment_method=PaymentMethod.CREDIT_CARD,
-        shipping_address="123 Test Street, Test City"
+        shipping_address="123 Test Street, Test City",
+        phone_number="0123456789",
+        notes="Test order"
     )
     
     return order_repository.save(order)

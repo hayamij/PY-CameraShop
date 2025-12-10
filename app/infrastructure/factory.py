@@ -46,8 +46,12 @@ def create_app(config_name=None):
     )
     
     # Initialize database AFTER models are imported
-    from .config import init_database
+    from .config import init_database, create_all_tables
     init_database(app)
+    
+    # Create tables in testing environment (for in-memory database)
+    if config_name == 'testing' or app.config.get('TESTING', False):
+        create_all_tables()
     
     # Initialize use cases and register blueprints
     register_blueprints(app)
@@ -115,6 +119,13 @@ def register_blueprints(app):
     from ..business.use_cases.register_user_use_case import RegisterUserUseCase
     from ..business.use_cases.login_user_use_case import LoginUserUseCase
     from ..business.use_cases.get_user_use_case import GetUserUseCase
+    from ..business.use_cases.list_users_use_case import ListUsersUseCase
+    from ..business.use_cases.search_users_use_case import SearchUsersUseCase
+    from ..business.use_cases.create_user_by_admin_use_case import CreateUserByAdminUseCase
+    from ..business.use_cases.update_user_by_admin_use_case import UpdateUserByAdminUseCase
+    from ..business.use_cases.delete_user_use_case import DeleteUserUseCase
+    from ..business.use_cases.change_user_role_use_case import ChangeUserRoleUseCase
+    from ..infrastructure.services import PasswordHashingService
     from ..business.use_cases.list_products_use_case import ListProductsUseCase
     from ..business.use_cases.get_product_detail_use_case import GetProductDetailUseCase
     from ..business.use_cases.view_cart_use_case import ViewCartUseCase
@@ -153,6 +164,12 @@ def register_blueprints(app):
     register_user_use_case = RegisterUserUseCase(user_repository)
     login_user_use_case = LoginUserUseCase(user_repository)
     get_user_use_case = GetUserUseCase(user_repository)
+    list_users_use_case = ListUsersUseCase(user_repository)
+    search_users_use_case = SearchUsersUseCase(user_repository)
+    create_user_use_case = CreateUserByAdminUseCase(user_repository, PasswordHashingService)
+    update_user_use_case = UpdateUserByAdminUseCase(user_repository)
+    delete_user_use_case = DeleteUserUseCase(user_repository)
+    change_user_role_use_case = ChangeUserRoleUseCase(user_repository)
     list_products_use_case = ListProductsUseCase(
         product_repository=product_repository,
         category_repository=category_repository,
@@ -266,6 +283,12 @@ def register_blueprints(app):
     
     # Create admin routes blueprint
     admin_bp = create_admin_routes(
+        list_users_use_case=list_users_use_case,
+        search_users_use_case=search_users_use_case,
+        create_user_use_case=create_user_use_case,
+        update_user_use_case=update_user_use_case,
+        delete_user_use_case=delete_user_use_case,
+        change_user_role_use_case=change_user_role_use_case,
         create_product_use_case=create_product_use_case,
         update_product_use_case=update_product_use_case,
         delete_product_use_case=delete_product_use_case,

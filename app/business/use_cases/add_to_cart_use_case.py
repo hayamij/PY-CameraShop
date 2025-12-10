@@ -120,10 +120,9 @@ class AddToCartUseCase:
             
             # Get updated cart totals
             cart = self.cart_repository.find_by_user_id(input_data.user_id)
-            total_items = sum(item.quantity for item in cart.items)
-            # TODO: Calculate cart_total by fetching product prices
-            # For now, return 0 as Cart entity doesn't have price information
-            cart_total = 0
+            total_items = len(cart.items)  # Count distinct items, not quantity sum
+            # Calculate cart total using domain method
+            cart_total = cart.get_total() if hasattr(cart, 'get_total') else 0
             
             return AddToCartOutputData(
                 success=True,

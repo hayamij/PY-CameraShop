@@ -143,3 +143,65 @@ class IUserRepository(ABC):
             Total number of users
         """
         pass
+    
+    @abstractmethod
+    def find_all_with_filters(
+        self, 
+        filters: dict, 
+        page: int, 
+        per_page: int, 
+        sort_by: str
+    ) -> tuple[List[User], int]:
+        """
+        Find all users with filters, pagination, and sorting
+        
+        Args:
+            filters: Dictionary of filters
+                - role: str (ADMIN/CUSTOMER)
+                - is_active: bool
+                - search_query: str (search in username, email, full_name)
+            page: Page number (1-indexed)
+            per_page: Items per page
+            sort_by: Sort option (newest, oldest, name_asc, name_desc)
+            
+        Returns:
+            Tuple of (users list, total count)
+        """
+        pass
+    
+    @abstractmethod
+    def search_by_query(self, query: str, limit: int = 50) -> List[User]:
+        """
+        Search users by query (username, email, full_name)
+        
+        Args:
+            query: Search query (minimum 2 characters)
+            limit: Maximum results (default 50)
+            
+        Returns:
+            List of matching users
+        """
+        pass
+    
+    @abstractmethod
+    def count_by_role(self, role) -> int:
+        """
+        Count users by role
+        
+        Args:
+            role: UserRole enum
+            
+        Returns:
+            Number of users with specified role
+        """
+        pass
+    
+    @abstractmethod
+    def count_active_users(self) -> int:
+        """
+        Count active users
+        
+        Returns:
+            Number of active users (is_active=True)
+        """
+        pass

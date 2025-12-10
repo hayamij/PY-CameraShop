@@ -93,8 +93,8 @@ class ViewCartUseCase:
                 
                 if product:
                     # Calculate item subtotal
-                    item_subtotal = product.price * item.quantity
-                    subtotal += item_subtotal
+                    item_subtotal = product.price.multiply(Decimal(item.quantity))
+                    subtotal += item_subtotal.amount
                     
                     # Check stock availability
                     is_available = (
@@ -107,10 +107,10 @@ class ViewCartUseCase:
                         product_id=product.id,  # Product entity uses .id, not .product_id
                         product_name=product.name,
                         product_image=product.image_url,
-                        price=product.price,
-                        currency=product.currency,
+                        price=product.price.amount,
+                        currency=product.price.currency,
                         quantity=item.quantity,
-                        subtotal=item_subtotal,
+                        subtotal=item_subtotal.amount,
                         stock_available=product.stock_quantity,
                         is_available=is_available
                     ))
@@ -122,7 +122,7 @@ class ViewCartUseCase:
             
             return ViewCartOutputData(
                 success=True,
-                cart_id=cart.cart_id,
+                cart_id=cart.id,
                 items=cart_items,
                 total_items=len(cart_items),
                 subtotal=subtotal,

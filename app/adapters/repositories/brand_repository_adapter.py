@@ -54,7 +54,10 @@ class BrandRepositoryAdapter(IBrandRepository):
     
     def find_all(self, active_only: bool = True) -> List[Brand]:
         """Find all brands"""
-        brand_models = self._session.query(BrandModel).all()
+        query = self._session.query(BrandModel)
+        if active_only:
+            query = query.filter(BrandModel.is_active == True)
+        brand_models = query.all()
         return [self._to_domain_entity(model) for model in brand_models]
     
     def delete(self, brand_id: int) -> bool:

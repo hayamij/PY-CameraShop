@@ -127,6 +127,120 @@ class UserRepositoryAdapter(IUserRepository):
         return self._session.query(UserModel).count()
     
     # ========================================================================
+    # NEW METHODS FOR ADMIN USER MANAGEMENT (USE CASE 1: ListUsers)
+    # ========================================================================
+    
+    def find_all_with_filters(
+        self,
+        filters: dict,
+        page: int = 1,
+        per_page: int = 20,
+        sort_by: str = 'created_at_desc'
+    ) -> tuple[List[User], int]:
+        """
+        Find users with filters, pagination, and sorting
+        
+        Args:
+            filters: Dict with keys: role (str), is_active (bool), search_query (str)
+            page: Page number (1-indexed)
+            per_page: Items per page
+            sort_by: Sort option (name_asc, name_desc, created_at_asc, created_at_desc)
+        
+        Returns:
+            Tuple of (list of User entities, total count)
+        """
+        # Build base query
+        query = self._session.query(UserModel)
+        
+        # Apply filters
+        if 'role' in filters:
+            role_map = {'ADMIN': 1, 'CUSTOMER': 2}
+            role_id = role_map.get(filters['role'].upper(), 2)
+            query = query.filter(UserModel.role_id == role_id)
+        
+        if 'is_active' in filters:
+            query = query.filter(UserModel.is_active == filters['is_active'])
+        
+        if 'search_query' in filters and filters['search_query']:
+            search_term = f"%{filters['search_query']}%"
+            query = query.filter(
+                (UserModel.username.ilike(search_term)) |
+                (UserModel.full_name.ilike(search_term)) |
+                (UserModel.email.ilike(search_term))
+            )
+        
+        # Get total count BEFORE pagination
+        total_count = query.count()
+        
+        # Apply sorting
+        sort_map = {
+            'name_asc': UserModel.full_name.asc(),
+            'name_desc': UserModel.full_name.desc(),
+            'created_at_asc': UserModel.created_at.asc(),
+            'created_at_desc': UserModel.created_at.desc()
+        }
+        order_by = sort_map.get(sort_by, UserModel.created_at.desc())
+        query = query.order_by(order_by)
+        
+        # Apply pagination
+        offset = (page - 1) * per_page
+        query = query.offset(offset).limit(per_page)
+        
+        # Execute query
+        user_models = query.all()
+        users = [self._to_domain_entity(model) for model in user_models]
+        
+        return users, total_count
+    
+    def search_by_query(self, query: str, limit: int = 50) -> List[User]:
+        """
+        Search users by query string (matches username, full_name, email)
+        
+        Args:
+            query: Search query string
+            limit: Max results to return
+        
+        Returns:
+            List of User entities matching the query
+        """
+        search_term = f"%{query}%"
+        user_models = self._session.query(UserModel).filter(
+            (UserModel.username.ilike(search_term)) |
+            (UserModel.full_name.ilike(search_term)) |
+            (UserModel.email.ilike(search_term))
+        ).limit(limit).all()
+        
+        return [self._to_domain_entity(model) for model in user_models]
+    
+    def count_by_role(self, role: str) -> int:
+        """
+        Count users by role
+        
+        Args:
+            role: Role name (ADMIN or CUSTOMER)
+        
+        Returns:
+            Number of users with specified role
+        """
+        role_map = {'ADMIN': 1, 'CUSTOMER': 2}
+        role_id = role_map.get(role.upper(), 2)
+        
+        return self._session.query(UserModel).filter(
+            UserModel.role_id == role_id
+        ).count()
+    
+    def count_active_users(self) -> int:
+        """
+        Count active users
+        
+        Returns:
+            Number of active users
+        """
+        return self._session.query(UserModel).filter(
+            UserModel.is_active == True
+        ).count()
+    
+    # ========================================================================
     # CONVERSION METHODS (Domain Entity ↔ ORM Model)
     # ========================================================================
     

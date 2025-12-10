@@ -310,13 +310,15 @@ class OrderRepositoryAdapter(IOrderRepository):
             order_items.append(order_item)
         
         # Reconstruct order with items
-        # Order.reconstruct(order_id, customer_id, items, payment_method, shipping_address, status, total_amount, created_at, updated_at)
+        # Order.reconstruct(order_id, customer_id, items, payment_method, shipping_address, phone_number, notes, status, total_amount, created_at, updated_at)
         return Order.reconstruct(
             order_id=order_model.order_id,
             customer_id=order_model.user_id,
             items=order_items,
             payment_method=PaymentMethod(order_model.payment_method),
             shipping_address=order_model.shipping_address,
+            phone_number=order_model.phone_number,
+            notes=order_model.notes or "",
             status=OrderStatus(order_model.order_status),
             total_amount=Money(order_model.total_amount, 'VND'),
             created_at=order_model.created_at,
@@ -333,16 +335,13 @@ class OrderRepositoryAdapter(IOrderRepository):
         Returns:
             OrderModel instance
         """
-        # Note: Order entity doesn't have phone and notes
-        # These are database-only fields for shipping requirements
-        # Decision: Keep phone/notes in adapter layer (not domain concern)
         order_model = OrderModel(
             user_id=order.customer_id,
             shipping_address=order.shipping_address,
-            phone_number='',  # Empty default - should be set by use case
+            phone_number=order.phone_number,
             order_status=order.status.value,
             payment_method=order.payment_method.value,
-            notes=None,
+            notes=order.notes,
             total_amount=order.total_amount.amount,
             created_at=order.created_at
         )
@@ -369,8 +368,9 @@ class OrderRepositoryAdapter(IOrderRepository):
             session: SQLAlchemy session
         """
         # Update order fields (typically only status changes after creation)
-        # Note: phone_number and notes are not updated from Order entity
         order_model.shipping_address = order.shipping_address
+        order_model.phone_number = order.phone_number
+        order_model.notes = order.notes
         order_model.order_status = order.status.value
         order_model.payment_method = order.payment_method.value
         order_model.total_amount = order.total_amount.amount

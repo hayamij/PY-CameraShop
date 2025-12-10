@@ -100,11 +100,13 @@ class PlaceOrderUseCase:
                         available=product.stock_quantity
                     )
             
-            # Calculate total from cart
-            total_amount = sum(
-                item.product.price.amount * item.quantity 
-                for item in cart.items
-            )
+            # Calculate total from cart by loading each product
+            from decimal import Decimal
+            total_amount = Decimal('0')
+            for item in cart.items:
+                product = self.product_repository.find_by_id(item.product_id)
+                if product:
+                    total_amount += product.price.amount * item.quantity
             
             # Parse payment method
             try:
@@ -130,7 +132,9 @@ class PlaceOrderUseCase:
                 customer_id=input_data.user_id,
                 items=order_items,
                 payment_method=payment_method_enum,
-                shipping_address=input_data.shipping_address
+                shipping_address=input_data.shipping_address,
+                phone_number=input_data.phone_number,
+                notes=input_data.notes
             )
             
             # Reduce product stock for each item
@@ -148,8 +152,8 @@ class PlaceOrderUseCase:
             return PlaceOrderOutputData(
                 success=True,
                 order_id=saved_order.id,
-                order_total=saved_order.total.amount,
-                total_amount=saved_order.total.amount,
+                order_total=saved_order.total_amount.amount,
+                total_amount=saved_order.total_amount.amount,
                 message=f"Order #{saved_order.id} placed successfully"
             )
         

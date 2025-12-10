@@ -101,7 +101,7 @@ class UpdateOrderStatusUseCase:
             
             return UpdateOrderStatusOutputData(
                 success=True,
-                order_id=order.order_id,
+                order_id=order.id,
                 old_status=old_status.value,
                 new_status=new_status.value,
                 message=f"Order status updated from {old_status.value} to {new_status.value}"

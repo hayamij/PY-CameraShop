@@ -52,6 +52,7 @@ class TestAddToCartUseCase:
     def create_mock_cart(self, cart_id, user_id, items=None):
         """Helper tạo mock cart"""
         cart = Mock()
+        cart.id = cart_id  # Use .id not .cart_id (domain entity property)
         cart.cart_id = cart_id
         cart.user_id = user_id
         cart.items = items or []

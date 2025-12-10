@@ -267,7 +267,7 @@ class GetDashboardStatsUseCase:
                 'customer_name': customer.full_name if customer else 'N/A',
                 'total': float(order.total_amount.amount),
                 'status': order.status.value,
-                'date': order.order_date.strftime('%d/%m/%Y %H:%M')
+                'date': order.created_at.strftime('%d/%m/%Y %H:%M')
             })
         
         return orders_data

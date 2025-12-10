@@ -74,7 +74,7 @@ class CancelOrderUseCase:
             raise OrderNotFoundException(input_data.order_id)
         
         # Verify order belongs to user
-        if order.user_id != input_data.user_id:
+        if order.customer_id != input_data.user_id:
             raise ValidationException("You don't have permission to cancel this order")
         
         # Verify order can be cancelled (only pending orders)

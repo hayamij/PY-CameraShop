@@ -27,7 +27,9 @@ class TestOrderRepositoryIntegration:
             customer_id=sample_user.id,
             items=items,
             payment_method=PaymentMethod.CREDIT_CARD,
-            shipping_address="123 Test Street"
+            shipping_address="123 Test Street",
+            phone_number="0123456789",
+            notes="Test order"
         )
         
         # Act
@@ -84,7 +86,9 @@ class TestOrderRepositoryIntegration:
                 customer_id=sample_user.id,
                 items=items,
                 payment_method=PaymentMethod.CREDIT_CARD,
-                shipping_address="Test Address"
+                shipping_address="Test Address",
+                phone_number="0123456789",
+                notes="Test order"
             )
             order_repository.save(order)
         
@@ -181,7 +185,9 @@ class TestOrderRepositoryIntegration:
             customer_id=sample_user.id,
             items=items,
             payment_method=PaymentMethod.BANK_TRANSFER,
-            shipping_address="123 Main St"
+            shipping_address="123 Main St",
+            phone_number="0123456789",
+            notes="Test order"
         )
         
         # Act
@@ -225,7 +231,9 @@ class TestOrderRepositoryIntegration:
             customer_id=sample_user.id,
             items=items,
             payment_method=PaymentMethod.CASH,
-            shipping_address="Test Address"
+            shipping_address="Test Address",
+            phone_number="0123456789",
+            notes="Test order"
         )
         
         # Act
@@ -258,7 +266,9 @@ class TestOrderRepositoryIntegration:
                 customer_id=sample_user.id,
                 items=items,
                 payment_method=payment_method,
-                shipping_address="Test Address"
+                shipping_address="Test Address",
+                phone_number="0123456789",
+                notes="Test order"
             )
             
             # Act
@@ -284,7 +294,9 @@ class TestOrderRepositoryIntegration:
                 customer_id=sample_user.id,
                 items=items,
                 payment_method=PaymentMethod.CREDIT_CARD,
-                shipping_address="Test Address"
+                shipping_address="Test Address",
+                phone_number="0123456789",
+                notes="Test order"
             )
             saved_order = order_repository.save(order)
             
@@ -315,3 +327,4 @@ class TestOrderRepositoryIntegration:
         assert found_order.created_at is not None
         assert isinstance(found_order.created_at, datetime)
         assert found_order.created_at <= datetime.now()
+

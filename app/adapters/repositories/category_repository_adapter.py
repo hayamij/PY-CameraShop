@@ -54,7 +54,10 @@ class CategoryRepositoryAdapter(ICategoryRepository):
     
     def find_all(self, active_only: bool = True) -> List[Category]:
         """Find all categories"""
-        category_models = self._session.query(CategoryModel).all()
+        query = self._session.query(CategoryModel)
+        if active_only:
+            query = query.filter(CategoryModel.is_active == True)
+        category_models = query.all()
         return [self._to_domain_entity(model) for model in category_models]
     
     def delete(self, category_id: int) -> bool:

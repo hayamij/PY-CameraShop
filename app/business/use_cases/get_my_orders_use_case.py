@@ -86,7 +86,7 @@ class GetMyOrdersUseCase:
         for order in orders:
             order_items.append(MyOrderItemData(
                 order_id=order.id,
-                total_amount=order.total.amount,
+                total_amount=order.total_amount.amount,
                 status=order.status.value,
                 payment_method=order.payment_method.value,
                 shipping_address=order.shipping_address,

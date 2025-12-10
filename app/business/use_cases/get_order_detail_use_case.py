@@ -126,7 +126,9 @@ class GetOrderDetailUseCase:
                 product_name = product.name if product else "Product Not Found"
                 product_image = product.image_url if product else None
                 
-                item_subtotal = item.unit_price * item.quantity
+                # Extract amount from Money object
+                unit_price_amount = item.unit_price.amount
+                item_subtotal = unit_price_amount * item.quantity
                 subtotal += item_subtotal
                 
                 order_items.append(OrderDetailItemData(
@@ -134,8 +136,8 @@ class GetOrderDetailUseCase:
                     product_name=product_name,
                     product_image=product_image,
                     quantity=item.quantity,
-                    unit_price=item.unit_price,
-                    subtotal=item_subtotal
+                    unit_price=float(unit_price_amount),
+                    subtotal=float(item_subtotal)
                 ))
             
             # Calculate totals (assuming business rules: 10% tax, $20 shipping)
@@ -145,8 +147,8 @@ class GetOrderDetailUseCase:
             
             return GetOrderDetailOutputData(
                 success=True,
-                order_id=order.order_id,
-                order_date=order.order_date,
+                order_id=order.id,
+                order_date=order.created_at,
                 status=order.status.value,
                 customer_id=order.customer_id,
                 customer_name=customer_name,
