@@ -1,132 +1,279 @@
 """
-Authentication Routes Blueprint
-Login, Register, Logout
+Authentication Routes - HTTP API Adapter Layer
+Clean Architecture: Controllers orchestrate only, no business logic
 """
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_user, logout_user, login_required, current_user
-from app.infrastructure.factory import bcrypt
-from app.infrastructure.database.models import UserModel
-from app.infrastructure.database.db import db
-from app.business.use_cases import (
+from flask import Blueprint, request, jsonify, session
+import bcrypt
+
+from ...business.use_cases.register_user_use_case import (
     RegisterUserUseCase,
     RegisterUserInputData,
-    LoginUserUseCase,
-    LoginUserInputData
+    RegisterUserOutputData
 )
-from app.adapters.repositories import UserRepositoryAdapter
-
-auth_bp = Blueprint('auth', __name__)
-
-# Initialize repository and use cases
-user_repository = UserRepositoryAdapter()
-register_use_case = RegisterUserUseCase(user_repository)
-login_use_case = LoginUserUseCase(user_repository)
-
-
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    """Login page and handler"""
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    
-    if request.method == 'POST':
-        username_or_email = request.form.get('username')
-        password = request.form.get('password')
-        remember = request.form.get('remember', False)
-        
-        if not username_or_email or not password:
-            flash('Vui lòng điền đầy đủ thông tin', 'danger')
-            return render_template('auth/login.html')
-        
-        # Find user in database (Infrastructure layer)
-        user_model = UserModel.query.filter(
-            (UserModel.username == username_or_email) | 
-            (UserModel.email == username_or_email)
-        ).first()
-        
-        if user_model and bcrypt.check_password_hash(user_model.password_hash, password):
-            if not user_model.is_active:
-                flash('Tài khoản đã bị vô hiệu hóa', 'danger')
-                return render_template('auth/login.html')
-            
-            # Login successful
-            login_user(user_model, remember=remember)
-            
-            # Redirect to next page or home
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            
-            # Redirect based on role
-            if user_model.role == 'ADMIN':
-                flash(f'Chào mừng Admin {user_model.full_name}!', 'success')
-                return redirect(url_for('admin.dashboard'))
-            else:
-                flash(f'Chào mừng {user_model.full_name}!', 'success')
-                return redirect(url_for('main.index'))
-        else:
-            flash('Tên đăng nhập hoặc mật khẩu không đúng', 'danger')
-    
-    return render_template('auth/login.html')
+from ...business.use_cases.login_user_use_case import (
+    LoginUserUseCase,
+    LoginUserInputData,
+    LoginUserOutputData
+)
+from ...business.use_cases.get_user_use_case import GetUserUseCase, GetUserInputData
+from ...business.ports import IUserRepository
 
 
-@auth_bp.route('/register', methods=['GET', 'POST'])
+# Blueprint definition
+auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+
+
+# Dependency injection will be done via blueprint registration
+# These will be set by the factory
+_register_use_case: RegisterUserUseCase = None
+_login_use_case: LoginUserUseCase = None
+_get_user_use_case: GetUserUseCase = None
+_user_repository: IUserRepository = None
+
+
+def init_auth_routes(register_uc: RegisterUserUseCase, 
+                     login_uc: LoginUserUseCase,
+                     get_user_uc: GetUserUseCase,
+                     user_repo: IUserRepository):
+    """Initialize authentication routes with use case dependencies."""
+    global _register_use_case, _login_use_case, _get_user_use_case, _user_repository
+    _register_use_case = register_uc
+    _login_use_case = login_uc
+    _get_user_use_case = get_user_uc
+    _user_repository = user_repo
+
+
+@auth_bp.route('/register', methods=['POST'])
 def register():
-    """Registration page and handler"""
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+    """
+    Register new user endpoint
     
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        full_name = request.form.get('full_name')
-        phone_number = request.form.get('phone_number')
-        address = request.form.get('address')
+    POST /api/auth/register
+    Body: {
+        "username": "string",
+        "email": "string",
+        "password": "string",
+        "full_name": "string",
+        "phone_number": "string" (optional),
+        "address": "string" (optional)
+    }
+    
+    Returns:
+        201: {"success": true, "user_id": int}
+        400: {"success": false, "error": "message"}
+    """
+    try:
+        # Debug: Check repository session
+        print(f"DEBUG Register: Repository session = {_user_repository._session}")
+        print(f"DEBUG Register: Session bind = {_user_repository._session.bind}")
+        print(f"DEBUG Register: DB URL = {_user_repository._session.bind.url}")
         
-        # Validation
-        if not all([username, email, password, full_name]):
-            flash('Vui lòng điền đầy đủ thông tin bắt buộc', 'danger')
-            return render_template('auth/register.html')
+        # Parse request JSON
+        data = request.get_json()
         
-        if password != confirm_password:
-            flash('Mật khẩu xác nhận không khớp', 'danger')
-            return render_template('auth/register.html')
+        # Validate required fields
+        required_fields = ['username', 'email', 'password', 'full_name']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'success': False,
+                    'error': f'Missing required field: {field}'
+                }), 400
         
-        if len(password) < 6:
-            flash('Mật khẩu phải có ít nhất 6 ký tự', 'danger')
-            return render_template('auth/register.html')
+        # Hash password (Infrastructure concern) - using bcrypt
+        password = data['password'].encode('utf-8')
+        salt = bcrypt.gensalt()
+        password_hash = bcrypt.hashpw(password, salt).decode('utf-8')
         
-        # Hash password (Infrastructure concern)
-        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        
-        # Execute use case
+        # Map HTTP request to Use Case Input
         input_data = RegisterUserInputData(
-            username=username,
-            email=email,
+            username=data['username'],
+            email=data['email'],
             password_hash=password_hash,
-            full_name=full_name,
-            phone_number=phone_number,
-            address=address
+            full_name=data['full_name'],
+            phone_number=data.get('phone_number'),
+            address=data.get('address')
         )
         
-        output_data = register_use_case.execute(input_data)
+        # Execute use case
+        output = _register_use_case.execute(input_data)
         
-        if output_data.success:
-            flash('Đăng ký thành công! Vui lòng đăng nhập.', 'success')
-            return redirect(url_for('auth.login'))
+        # Map Use Case Output to HTTP Response
+        if output.success:
+            return jsonify({
+                'success': True,
+                'user_id': output.user_id,
+                'message': 'Registration successful'
+            }), 201
         else:
-            flash(output_data.error_message, 'danger')
-            return render_template('auth/register.html')
+            return jsonify({
+                'success': False,
+                'error': output.error_message
+            }), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
+
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    """
+    User login endpoint
     
-    return render_template('auth/register.html')
+    POST /api/auth/login
+    Body: {
+        "username": "string",  // Can be username or email
+        "password": "string"
+    }
+    
+    Returns:
+        200: {"success": true, "user": {...}}
+        401: {"success": false, "error": "message"}
+    """
+    try:
+        # Debug: Check repository session
+        print(f"DEBUG Login: Repository session = {_user_repository._session}")
+        print(f"DEBUG Login: Session bind = {_user_repository._session.bind}")
+        print(f"DEBUG Login: DB URL = {_user_repository._session.bind.url}")
+        
+        # Parse request JSON
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data or 'username' not in data or 'password' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Username and password are required'
+            }), 400
+        
+        username_or_email = data['username']
+        password = data['password']
+        
+        # First, execute use case to get user info
+        # Note: Use case doesn't verify password (no bcrypt in business layer)
+        input_data = LoginUserInputData(
+            username_or_email=username_or_email,
+            password_hash=''  # Placeholder, not used in use case
+        )
+        
+        output = _login_use_case.execute(input_data)
+        
+        if not output.success:
+            return jsonify({
+                'success': False,
+                'error': output.error_message
+            }), 401
+        
+        # Now verify password (Infrastructure concern)
+        # Get user entity from repository to access password_hash
+        user = _user_repository.find_by_id(output.user_id)
+        
+        if not user:
+            return jsonify({
+                'success': False,
+                'error': 'User not found'
+            }), 401
+        
+        # Verify password hash using bcrypt
+        password_bytes = password.encode('utf-8')
+        stored_hash_bytes = user.password_hash.encode('utf-8')
+        if not bcrypt.checkpw(password_bytes, stored_hash_bytes):
+            return jsonify({
+                'success': False,
+                'error': 'Invalid username or password'
+            }), 401
+        
+        # Store user session
+        session['user_id'] = output.user_id
+        session['username'] = output.username
+        session['role'] = output.role
+        
+        # Return success response
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': output.user_id,
+                'username': output.username,
+                'role': output.role,
+                'full_name': user.full_name,
+                'email': user.email.address
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
 
 
-@auth_bp.route('/logout')
-@login_required
+@auth_bp.route('/logout', methods=['POST'])
 def logout():
-    """Logout handler"""
-    logout_user()
-    flash('Đã đăng xuất thành công', 'success')
-    return redirect(url_for('main.index'))
+    """
+    User logout endpoint
+    
+    POST /api/auth/logout
+    
+    Returns:
+        200: {"success": true, "message": "Logged out"}
+    """
+    session.clear()
+    return jsonify({
+        'success': True,
+        'message': 'Logged out successfully'
+    }), 200
+
+
+@auth_bp.route('/me', methods=['GET'])
+def get_current_user():
+    """
+    Get current authenticated user
+    
+    GET /api/auth/me
+    
+    Returns:
+        200: {"success": true, "user": {...}}
+        401: {"success": false, "error": "Not authenticated"}
+    """
+    try:
+        # Check if user is logged in
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated'
+            }), 401
+        
+        # Get user details
+        input_data = GetUserInputData(user_id)
+        output = _get_user_use_case.execute(input_data)
+        
+        if not output.success:
+            session.clear()  # Clear invalid session
+            return jsonify({
+                'success': False,
+                'error': 'User not found'
+            }), 401
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': output.user_id,
+                'username': output.username,
+                'email': output.email,
+                'full_name': output.full_name,
+                'role': output.role,
+                'phone_number': output.phone_number,
+                'address': output.address,
+                'is_active': output.is_active
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500

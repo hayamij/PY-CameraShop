@@ -36,6 +36,7 @@ class TestViewCartUseCase:
     def create_mock_product(self, product_id, name, price, stock=10, is_visible=True, image_url=None):
         """Helper tạo mock product"""
         product = Mock()
+        product.id = product_id
         product.product_id = product_id
         product.name = name
         product.price = Decimal(str(price))

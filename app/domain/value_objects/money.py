@@ -15,12 +15,16 @@ class Money:
         Initialize Money value object
         
         Args:
-            amount: Decimal amount
+            amount: Decimal amount (or numeric that can be converted to Decimal)
             currency: Currency code (default: VND)
             
         Raises:
             ValueError: If amount is negative or currency not supported
         """
+        # Convert to Decimal if not already
+        if not isinstance(amount, Decimal):
+            amount = Decimal(str(amount))
+            
         if amount < 0:
             raise ValueError("Money amount cannot be negative")
         if currency not in self.SUPPORTED_CURRENCIES:

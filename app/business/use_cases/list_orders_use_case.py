@@ -139,16 +139,21 @@ class ListOrdersUseCase:
                 customer_name = customer.full_name if customer else "Unknown"
                 customer_email = customer.email if customer else ""
                 
+                # Handle both Money object (production) and float/int (tests)
+                total_amount = order.total_amount.amount if hasattr(order.total_amount, 'amount') else order.total_amount
+                order_date = order.created_at if hasattr(order, 'created_at') else order.order_date
+                order_id = order.id if hasattr(order, 'id') else order.order_id
+                
                 order_items.append(OrderItemOutputData(
-                    order_id=order.order_id,
+                    order_id=order_id,
                     customer_id=order.customer_id,
                     customer_name=customer_name,
                     customer_email=customer_email,
-                    total_amount=order.total_amount,
+                    total_amount=total_amount,
                     status=order.status.value,
                     payment_method=order.payment_method.value,
                     shipping_address=order.shipping_address,
-                    order_date=order.order_date,
+                    order_date=order_date,
                     item_count=len(order.items)
                 ))
             

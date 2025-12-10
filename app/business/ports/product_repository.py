@@ -125,6 +125,19 @@ class IProductRepository(ABC):
         pass
     
     @abstractmethod
+    def find_by_name(self, name: str) -> Optional[Product]:
+        """
+        Find product by exact name
+        
+        Args:
+            name: Product name
+            
+        Returns:
+            Product entity or None if not found
+        """
+        pass
+    
+    @abstractmethod
     def delete(self, product_id: int) -> bool:
         """
         Delete product

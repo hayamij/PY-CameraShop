@@ -1,10 +1,10 @@
-import flask as flask
+"""
+Main entry point for the Camera Shop application
+Run this file to start the Flask development server
+"""
+from app import create_app
 
-app = flask.Flask(__name__)
-
-@app.route('/')
-def home():
-    return flask.render_template('index.html')
+app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

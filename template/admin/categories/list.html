@@ -1,108 +1,273 @@
-{% extends "admin/base.html" %}
+{% extends 'admin_base.html' %}
 
-{% block title %}Quản lý Danh mục - Admin{% endblock %}
+{% block title %}Quản lý danh mục - Camera Shop Admin{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-0">📂 Quản lý Danh mục</h2>
-            <p class="text-muted mb-0">Danh sách các danh mục sản phẩm</p>
-        </div>
-        <a href="{{ url_for('admin_categories.create_category') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Thêm Danh mục
-        </a>
+{% block admin_content %}
+<div class="admin-header">
+    <h1>📋 Quản lý danh mục</h1>
+    <button class="btn btn-success" onclick="showAddCategoryModal()">+ Thêm danh mục</button>
+</div>
+
+<div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Tìm kiếm danh mục..." class="input" oninput="renderCategories()">
+</div>
+
+<div class="admin-section">
+    <div id="loadingIndicator" class="loading">
+        <div class="spinner"></div>
+        <p style="color: #666;">Đang tải danh mục...</p>
     </div>
 
-    <!-- Categories Table -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 10%;">ID</th>
-                            <th style="width: 30%;">Tên Danh mục</th>
-                            <th style="width: 40%;">Mô tả</th>
-                            <th style="width: 10%;" class="text-center">Số sản phẩm</th>
-                            <th style="width: 10%;" class="text-center">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if categories %}
-                            {% for item in categories %}
-                            <tr>
-                                <td>{{ item.category.id }}</td>
-                                <td>
-                                    <strong>{{ item.category.name }}</strong>
-                                </td>
-                                <td>
-                                    {% if item.category.description %}
-                                        {{ item.category.description[:100] }}
-                                        {% if item.category.description|length > 100 %}...{% endif %}
-                                    {% else %}
-                                        <span class="text-muted">Chưa có mô tả</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-info">{{ item.product_count }} sản phẩm</span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ url_for('admin_categories.edit_category', category_id=item.category.id) }}" 
-                                           class="btn btn-sm btn-warning" title="Chỉnh sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ url_for('admin_categories.delete_category', category_id=item.category.id) }}" 
-                                              method="POST" 
-                                              style="display: inline;"
-                                              onsubmit="return confirm('Bạn có chắc muốn xóa danh mục này không?');">
-                                            <button type="submit" 
-                                                    class="btn btn-sm btn-danger" 
-                                                    title="Xóa"
-                                                    {% if item.product_count > 0 %}disabled{% endif %}>
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                    {% if item.product_count > 0 %}
-                                        <small class="d-block text-muted mt-1">
-                                            Không thể xóa (có sản phẩm)
-                                        </small>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                    Chưa có danh mục nào
-                                </td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div id="categoriesList" class="table-wrapper hidden">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên danh mục</th>
+                    <th>Số sản phẩm</th>
+                    <th class="actions-col">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="categoriesTableBody">
+                <!-- Categories will be loaded here -->
+            </tbody>
+        </table>
     </div>
 </div>
 
-<style>
-.table th {
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
+<!-- Add/Edit Category Modal -->
+<div id="categoryModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2 id="modalTitle">Thêm danh mục mới</h2>
+        <form id="categoryForm">
+            <input type="hidden" id="categoryId">
+            <div class="form-group">
+                <label>Tên danh mục</label>
+                <input type="text" id="categoryName" class="input" required>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let categories = [];
+
+async function loadCategories() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const categoriesList = document.getElementById('categoriesList');
+    
+    try {
+        loadingIndicator.classList.remove('hidden');
+        categoriesList.classList.add('hidden');
+        
+        const response = await fetch('/api/catalog/categories');
+        const data = await response.json();
+        categories = data;
+        renderCategories();
+        
+        loadingIndicator.classList.add('hidden');
+        categoriesList.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        loadingIndicator.classList.add('hidden');
+        showAlert('Không thể tải danh sách danh mục', 'error');
+    }
 }
 
-.btn-group .btn {
-    padding: 0.25rem 0.5rem;
+function renderCategories() {
+    const tbody = document.getElementById('categoriesTableBody');
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    
+    const filtered = categories.filter(c => c.name.toLowerCase().includes(search));
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: #999;">Không có danh mục nào</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(cat => `
+        <tr>
+            <td>${cat.category_id || cat.id}</td>
+            <td><strong>${cat.name}</strong></td>
+            <td>${cat.product_count || 0}</td>
+            <td class="actions-col">
+                <button onclick="editCategory(${cat.category_id || cat.id})" class="btn btn-sm btn-primary">Sửa</button>
+                <button onclick="deleteCategory(${cat.category_id || cat.id})" class="btn btn-sm btn-danger">Xóa</button>
+            </td>
+        </tr>
+    `).join('');
 }
 
-.card {
+function showAddCategoryModal() {
+    document.getElementById('modalTitle').textContent = 'Thêm danh mục mới';
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryModal').style.display = 'flex';
+}
+
+function editCategory(id) {
+    const category = categories.find(c => c.id === id);
+    if (!category) return;
+    
+    document.getElementById('modalTitle').textContent = 'Chỉnh sửa danh mục';
+    document.getElementById('categoryId').value = id;
+    document.getElementById('categoryName').value = category.name;
+    document.getElementById('categoryModal').style.display = 'flex';
+}
+
+function hideModal() {
+    document.getElementById('categoryModal').style.display = 'none';
+}
+
+document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const id = document.getElementById('categoryId').value;
+    const name = document.getElementById('categoryName').value;
+    
+    try {
+        const url = id ? `/api/admin/categories/${id}` : '/api/admin/categories';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success || response.ok) {
+            showToast(id ? 'Cập nhật thành công!' : 'Thêm thành công!', 'success');
+            hideModal();
+            loadCategories();
+        } else {
+            showToast(data.errorMessage || 'Có lỗi xảy ra', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Lỗi kết nối', 'error');
+    }
+});
+
+async function deleteCategory(id) {
+    if (!confirm('Bạn có chắc muốn xóa danh mục này?')) return;
+    
+    try {
+        const response = await fetch(`/api/admin/categories/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showToast('Xóa thành công!', 'success');
+            loadCategories();
+        } else {
+            showToast('Không thể xóa danh mục', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Lỗi kết nối', 'error');
+    }
+}
+
+window.onload = loadCategories;
+</script>
+{% endblock %}
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.item-row {
+    background: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-edit, .btn-delete {
+    padding: 8px 16px;
     border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-edit {
+    background: #000;
+    color: #fff;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: #fff;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.form-actions button {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.form-actions button[type="submit"] {
+    background: #000;
+    color: #fff;
 }
 </style>
 {% endblock %}

@@ -1,71 +1,159 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Camera Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+</head>
+<body>
+<div class="register-container">
+    <div class="register-banner">
+        <div class="banner-content">
+            <div class="banner-icon">📷</div>
+            <h1>Camera Shop</h1>
+            <p>Tạo tài khoản để bắt đầu mua sắm máy ảnh và phụ kiện chất lượng cao</p>
+        </div>
 
-{% block title %}Đăng ký - Camera Shop{% endblock %}
-
-{% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4">
-                        <i class="fas fa-user-plus"></i> Đăng ký tài khoản
-                    </h2>
-                    
-                    <form method="POST" action="{{ url_for('auth.register') }}">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="username" name="username" required>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="full_name" class="form-label">Họ và tên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="full_name" name="full_name" required>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" id="password" name="password" required minlength="6">
-                                <small class="form-text text-muted">Tối thiểu 6 ký tự</small>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="confirm_password" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6">
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="phone_number" class="form-label">Số điện thoại</label>
-                            <input type="tel" class="form-control" id="phone_number" name="phone_number" placeholder="0xxxxxxxxx">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="address" class="form-label">Địa chỉ</label>
-                            <textarea class="form-control" id="address" name="address" rows="2"></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
-                            <i class="fas fa-user-plus"></i> Đăng ký
-                        </button>
-                        
-                        <div class="text-center">
-                            <p class="mb-0">Đã có tài khoản? 
-                                <a href="{{ url_for('auth.login') }}">Đăng nhập ngay</a>
-                            </p>
-                        </div>
-                    </form>
-                </div>
+        <div class="benefits">
+            <div class="benefit-item">
+                <span class="benefit-icon">✓</span>
+                <span>Miễn phí vận chuyển toàn quốc</span>
+            </div>
+            <div class="benefit-item">
+                <span class="benefit-icon">✓</span>
+                <span>Ưu đãi đặc biệt cho thành viên mới</span>
+            </div>
+            <div class="benefit-item">
+                <span class="benefit-icon">✓</span>
+                <span>Bảo mật thông tin tuyệt đối</span>
+            </div>
+            <div class="benefit-item">
+                <span class="benefit-icon">✓</span>
+                <span>Thanh toán an toàn, tiện lợi</span>
             </div>
         </div>
     </div>
+
+    <div class="register-form-container">
+        <div class="form-header">
+            <h2>Đăng ký tài khoản</h2>
+            <p>Điền thông tin để tạo tài khoản mới</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="registerForm">
+            <div class="form-group full-width">
+                <label for="username">Tên đăng nhập <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="form-control" 
+                    placeholder="username123"
+                    required
+                    minlength="3"
+                >
+                <div class="validation-message" id="usernameError"></div>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="name">Họ và tên <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    class="form-control" 
+                    placeholder="Nguyễn Văn A"
+                    required
+                >
+                <div class="validation-message" id="nameError"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Email <span class="required">*</span></label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-control" 
+                        placeholder="example@email.com"
+                        required
+                    >
+                    <div class="validation-message" id="emailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Số điện thoại <span class="required">*</span></label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        class="form-control" 
+                        placeholder="0123456789"
+                        required
+                    >
+                    <div class="validation-message" id="phoneError"></div>
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="address">Địa chỉ <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="address" 
+                    class="form-control" 
+                    placeholder="123 Đường ABC, Quận XYZ, TP. HCM"
+                    required
+                >
+                <div class="validation-message" id="addressError"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Mật khẩu <span class="required">*</span></label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-control" 
+                        placeholder="Tối thiểu 6 ký tự"
+                        required
+                    >
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="strengthBar"></div>
+                    </div>
+                    <div class="password-hint" id="strengthText">Nhập mật khẩu</div>
+                    <div class="validation-message" id="passwordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu <span class="required">*</span></label>
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        class="form-control" 
+                        placeholder="Nhập lại mật khẩu"
+                        required
+                    >
+                    <div class="validation-message" id="confirmPasswordError"></div>
+                </div>
+            </div>
+
+            <label class="terms-checkbox">
+                <input type="checkbox" id="agreeTerms" required>
+                <span>Tôi đồng ý với <a href="#terms">Điều khoản sử dụng</a> và <a href="#privacy">Chính sách bảo mật</a></span>
+            </label>
+
+            <button type="submit" class="btn-register" id="registerBtn">
+                Đăng ký tài khoản
+            </button>
+
+            <div class="login-link">
+                Đã có tài khoản? <a href="{{ url_for('views.login') }}">Đăng nhập ngay</a>
+            </div>
+        </form>
+    </div>
 </div>
-{% endblock %}
+
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/register.js') }}"></script>
+</body>
+</html>

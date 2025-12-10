@@ -1,4 +1,4 @@
-database.sql
+database-setup.sql
 materials/
 .env.example
 .env

@@ -1,67 +1,100 @@
 """
-Brand Repository Adapter - Infrastructure implementation
+Brand Repository Adapter - Infrastructure Implementation
+Implements IBrandRepository port from Business layer
 """
 from typing import Optional, List
-from ...business.ports import IBrandRepository
+from sqlalchemy.orm import Session
+
+from ...business.ports.brand_repository import IBrandRepository
 from ...domain.entities import Brand
 from ...infrastructure.database.models import BrandModel
-from ...infrastructure.database.db import db
 
 
 class BrandRepositoryAdapter(IBrandRepository):
-    """Adapter implementing brand repository using SQLAlchemy"""
+    """Brand Repository Adapter (Infrastructure layer)"""
+    
+    def __init__(self, session: Session):
+        self._session = session
     
     def save(self, brand: Brand) -> Brand:
-        """Save or update brand"""
-        if brand.brand_id:
-            # Update existing
-            brand_model = BrandModel.query.get(brand.brand_id)
-            if brand_model:
-                brand_model.name = brand.name
-                brand_model.description = brand.description
-                brand_model.logo = brand.logo
-        else:
-            # Create new
-            brand_model = self._to_db_model(brand)
-            db.session.add(brand_model)
-        
-        db.session.commit()
-        return self._to_domain(brand_model)
+        """Save brand to database"""
+        try:
+            if brand.id is None:
+                brand_model = self._to_orm_model(brand)
+                self._session.add(brand_model)
+            else:
+                brand_model = self._session.query(BrandModel).filter_by(brand_id=brand.id).first()
+                if not brand_model:
+                    brand_model = self._to_orm_model(brand)
+                    self._session.add(brand_model)
+                else:
+                    self._update_model_from_entity(brand_model, brand)
+            
+            self._session.commit()
+            self._session.refresh(brand_model)
+            
+            return self._to_domain_entity(brand_model)
+        except Exception as e:
+            self._session.rollback()
+            raise e
     
     def find_by_id(self, brand_id: int) -> Optional[Brand]:
         """Find brand by ID"""
-        brand_model = BrandModel.query.get(brand_id)
+        brand_model = self._session.query(BrandModel).filter_by(brand_id=brand_id).first()
         if brand_model:
-            return self._to_domain(brand_model)
+            return self._to_domain_entity(brand_model)
         return None
     
-    def find_all(self) -> List[Brand]:
+    def find_by_name(self, name: str) -> Optional[Brand]:
+        """Find brand by name"""
+        brand_model = self._session.query(BrandModel).filter_by(name=name).first()
+        if brand_model:
+            return self._to_domain_entity(brand_model)
+        return None
+    
+    def find_all(self, active_only: bool = True) -> List[Brand]:
         """Find all brands"""
-        brand_models = BrandModel.query.all()
-        return [self._to_domain(model) for model in brand_models]
+        brand_models = self._session.query(BrandModel).all()
+        return [self._to_domain_entity(model) for model in brand_models]
     
     def delete(self, brand_id: int) -> bool:
-        """Delete brand by ID"""
-        brand_model = BrandModel.query.get(brand_id)
+        """Delete brand"""
+        brand_model = self._session.query(BrandModel).filter_by(brand_id=brand_id).first()
         if brand_model:
-            db.session.delete(brand_model)
-            db.session.commit()
+            self._session.delete(brand_model)
+            self._session.commit()
             return True
         return False
     
-    def _to_domain(self, model: BrandModel) -> Brand:
-        """Convert database model to domain entity"""
+    def exists_by_name(self, name: str) -> bool:
+        """Check if brand name exists"""
+        return self._session.query(BrandModel).filter_by(name=name).count() > 0
+    
+    def count(self, active_only: bool = True) -> int:
+        """Count total brands"""
+        return self._session.query(BrandModel).count()
+    
+    def _to_domain_entity(self, model: BrandModel) -> Brand:
+        """Convert ORM model to domain entity"""
         return Brand.reconstruct(
-            brand_id=model.id,
+            brand_id=model.brand_id,
             name=model.name,
             description=model.description,
-            logo=model.logo
+            logo_url=model.logo_url,
+            is_active=model.is_active,
+            created_at=model.created_at
         )
     
-    def _to_db_model(self, brand: Brand) -> BrandModel:
-        """Convert domain entity to database model"""
+    def _to_orm_model(self, entity: Brand) -> BrandModel:
+        """Convert domain entity to ORM model"""
         return BrandModel(
-            name=brand.name,
-            description=brand.description,
-            logo=brand.logo
+            brand_id=entity.id if entity.id else None,
+            name=entity.name,
+            description=entity.description,
+            created_at=entity.created_at
         )
+    
+    def _update_model_from_entity(self, model: BrandModel, entity: Brand):
+        """Update existing ORM model from domain entity"""
+        model.name = entity.name
+        model.description = entity.description

@@ -1,67 +1,99 @@
 """
-Category Repository Adapter - Infrastructure implementation
+Category Repository Adapter - Infrastructure Implementation
+Implements ICategoryRepository port from Business layer
 """
 from typing import Optional, List
-from ...business.ports import ICategoryRepository
+from sqlalchemy.orm import Session
+
+from ...business.ports.category_repository import ICategoryRepository
 from ...domain.entities import Category
 from ...infrastructure.database.models import CategoryModel
-from ...infrastructure.database.db import db
 
 
 class CategoryRepositoryAdapter(ICategoryRepository):
-    """Adapter implementing category repository using SQLAlchemy"""
+    """Category Repository Adapter (Infrastructure layer)"""
+    
+    def __init__(self, session: Session):
+        self._session = session
     
     def save(self, category: Category) -> Category:
-        """Save or update category"""
-        if category.category_id:
-            # Update existing
-            category_model = CategoryModel.query.get(category.category_id)
-            if category_model:
-                category_model.name = category.name
-                category_model.description = category.description
-                category_model.slug = category.slug
-        else:
-            # Create new
-            category_model = self._to_db_model(category)
-            db.session.add(category_model)
-        
-        db.session.commit()
-        return self._to_domain(category_model)
+        """Save category to database"""
+        try:
+            if category.id is None:
+                category_model = self._to_orm_model(category)
+                self._session.add(category_model)
+            else:
+                category_model = self._session.query(CategoryModel).filter_by(category_id=category.id).first()
+                if not category_model:
+                    category_model = self._to_orm_model(category)
+                    self._session.add(category_model)
+                else:
+                    self._update_model_from_entity(category_model, category)
+            
+            self._session.commit()
+            self._session.refresh(category_model)
+            
+            return self._to_domain_entity(category_model)
+        except Exception as e:
+            self._session.rollback()
+            raise e
     
     def find_by_id(self, category_id: int) -> Optional[Category]:
         """Find category by ID"""
-        category_model = CategoryModel.query.get(category_id)
+        category_model = self._session.query(CategoryModel).filter_by(category_id=category_id).first()
         if category_model:
-            return self._to_domain(category_model)
+            return self._to_domain_entity(category_model)
         return None
     
-    def find_all(self) -> List[Category]:
+    def find_by_name(self, name: str) -> Optional[Category]:
+        """Find category by name"""
+        category_model = self._session.query(CategoryModel).filter_by(name=name).first()
+        if category_model:
+            return self._to_domain_entity(category_model)
+        return None
+    
+    def find_all(self, active_only: bool = True) -> List[Category]:
         """Find all categories"""
-        category_models = CategoryModel.query.all()
-        return [self._to_domain(model) for model in category_models]
+        category_models = self._session.query(CategoryModel).all()
+        return [self._to_domain_entity(model) for model in category_models]
     
     def delete(self, category_id: int) -> bool:
-        """Delete category by ID"""
-        category_model = CategoryModel.query.get(category_id)
+        """Delete category"""
+        category_model = self._session.query(CategoryModel).filter_by(category_id=category_id).first()
         if category_model:
-            db.session.delete(category_model)
-            db.session.commit()
+            self._session.delete(category_model)
+            self._session.commit()
             return True
         return False
     
-    def _to_domain(self, model: CategoryModel) -> Category:
-        """Convert database model to domain entity"""
+    def exists_by_name(self, name: str) -> bool:
+        """Check if category name exists"""
+        return self._session.query(CategoryModel).filter_by(name=name).count() > 0
+    
+    def count(self, active_only: bool = True) -> int:
+        """Count total categories"""
+        return self._session.query(CategoryModel).count()
+    
+    def _to_domain_entity(self, model: CategoryModel) -> Category:
+        """Convert ORM model to domain entity"""
         return Category.reconstruct(
-            category_id=model.id,
+            category_id=model.category_id,
             name=model.name,
             description=model.description,
-            slug=model.slug
+            is_active=model.is_active,
+            created_at=model.created_at
         )
     
-    def _to_db_model(self, category: Category) -> CategoryModel:
-        """Convert domain entity to database model"""
+    def _to_orm_model(self, entity: Category) -> CategoryModel:
+        """Convert domain entity to ORM model"""
         return CategoryModel(
-            name=category.name,
-            description=category.description,
-            slug=category.slug
+            category_id=entity.id if entity.id else None,
+            name=entity.name,
+            description=entity.description,
+            created_at=entity.created_at
         )
+    
+    def _update_model_from_entity(self, model: CategoryModel, entity: Category):
+        """Update existing ORM model from domain entity"""
+        model.name = entity.name
+        model.description = entity.description

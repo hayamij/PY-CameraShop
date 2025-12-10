@@ -41,6 +41,7 @@ class TestListProductsUseCase:
     def create_mock_product(self, product_id, name, price, category_id=1, brand_id=1, stock=10):
         """Helper để tạo mock product với đầy đủ attributes"""
         product = Mock()
+        product.id = product_id
         product.product_id = product_id
         product.name = name
         product.description = f"Mô tả cho {name}"

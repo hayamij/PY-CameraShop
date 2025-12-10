@@ -104,7 +104,7 @@ class ViewCartUseCase:
                     
                     cart_items.append(CartItemOutputData(
                         cart_item_id=item.cart_item_id,
-                        product_id=product.product_id,
+                        product_id=product.id,  # Product entity uses .id, not .product_id
                         product_name=product.name,
                         product_image=product.image_url,
                         price=product.price,

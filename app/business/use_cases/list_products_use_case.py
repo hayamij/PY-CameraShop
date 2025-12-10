@@ -22,6 +22,7 @@ class ListProductsInputData:
 
 
 @dataclass
+@dataclass
 class ProductItemOutputData:
     """Single product data for output"""
     product_id: int
@@ -141,7 +142,7 @@ class ListProductsUseCase:
                         brand_name = brand.name
                 
                 product_items.append(ProductItemOutputData(
-                    product_id=product.product_id,
+                    product_id=product.id,  # Product entity uses .id, not .product_id
                     name=product.name,
                     description=product.description,
                     price=float(product.price.amount),
@@ -202,6 +203,6 @@ class ListProductsUseCase:
             return sorted(products, key=lambda p: p.name.lower())
         elif sort_by == 'newest':
             # Assuming products with higher IDs are newer
-            return sorted(products, key=lambda p: p.product_id, reverse=True)
+            return sorted(products, key=lambda p: p.id, reverse=True)  # Product entity uses .id
         else:
             return products

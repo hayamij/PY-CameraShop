@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - Camera Shop{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-layout.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+    <!-- Admin Navbar -->
+    <nav class="navbar admin-navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('views.admin_dashboard') }}" class="logo">
+                <span>📷 Camera Shop - Admin</span>
+            </a>
+            <div class="user-info">
+                <span class="user-greeting">Xin chào, <span class="user-name" id="adminName">Admin</span></span>
+                <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Layout: Sidebar + Content -->
+    <div class="admin-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">TỔNG QUAN</h3>
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="{{ url_for('views.admin_dashboard') }}" 
+                           class="sidebar-link {% if request.endpoint == 'views.admin_dashboard' %}active{% endif %}">
+                            <span class="sidebar-icon">📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">QUẢN LÝ SẢN PHẨM</h3>
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="{{ url_for('views.admin_products') }}" 
+                           class="sidebar-link {% if request.endpoint == 'views.admin_products' %}active{% endif %}">
+                            <span class="sidebar-icon">📦</span>
+                            <span>Sản phẩm</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('views.admin_categories') }}" 
+                           class="sidebar-link {% if request.endpoint == 'views.admin_categories' %}active{% endif %}">
+                            <span class="sidebar-icon">🗂️</span>
+                            <span>Danh mục</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('views.admin_brands') }}" 
+                           class="sidebar-link {% if request.endpoint == 'views.admin_brands' %}active{% endif %}">
+                            <span class="sidebar-icon">🏷️</span>
+                            <span>Thương hiệu</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">BÁN HÀNG</h3>
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="{{ url_for('views.admin_orders') }}" 
+                           class="sidebar-link {% if request.endpoint == 'views.admin_orders' %}active{% endif %}">
+                            <span class="sidebar-icon">🛒</span>
+                            <span>Đơn hàng</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script>
+        // Update admin username in header
+        function updateAdminGreeting() {
+            const username = sessionStorage.getItem('username') || sessionStorage.getItem('fullName') || 'Admin';
+            const adminNameEl = document.getElementById('adminName');
+            if (adminNameEl) {
+                adminNameEl.textContent = username;
+            }
+        }
+        
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', updateAdminGreeting);
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

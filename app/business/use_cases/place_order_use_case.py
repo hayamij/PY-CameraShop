@@ -95,7 +95,7 @@ class PlaceOrderUseCase:
                 
                 if product.stock_quantity < cart_item.quantity:
                     raise InsufficientStockException(
-                        product_id=product.product_id,
+                        product_id=product.id,  # Product entity uses .id, not .product_id
                         requested=cart_item.quantity,
                         available=product.stock_quantity
                     )
@@ -118,7 +118,7 @@ class PlaceOrderUseCase:
             for cart_item in cart.items:
                 product = self.product_repository.find_by_id(cart_item.product_id)
                 order_item = OrderItem(
-                    product_id=product.product_id,
+                    product_id=product.id,  # Product entity uses .id, not .product_id
                     product_name=product.name,
                     quantity=cart_item.quantity,
                     unit_price=product.price

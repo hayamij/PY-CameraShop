@@ -1,287 +1,58 @@
-{% extends "base.html" %}
+{% extends 'admin_base.html' %}
 
-{% block title %}Quản lý Sản phẩm - Admin{% endblock %}
+{% block title %}Quản lý sản phẩm | Admin{% endblock %}
 
-{% block extra_css %}
-<style>
-    .admin-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem 0;
-        margin-bottom: 2rem;
-    }
-    
-    .filters-card {
-        background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
-    }
-    
-    .products-table-card {
-        background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .product-image {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 4px;
-    }
-    
-    .status-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-    
-    .status-visible {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
-    
-    .status-hidden {
-        background-color: #f8d7da;
-        color: #842029;
-    }
-    
-    .stock-low {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    
-    .stock-ok {
-        color: #198754;
-    }
-    
-    .btn-action {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-        margin: 0 0.125rem;
-    }
-    
-    .btn-create {
-        background-color: #667eea;
-        color: white;
-        border: none;
-        padding: 0.5rem 1.5rem;
-        border-radius: 4px;
-        text-decoration: none;
-        display: inline-block;
-    }
-    
-    .btn-create:hover {
-        background-color: #5568d3;
-        color: white;
-    }
-</style>
+{% block admin_content %}
+<div class="admin-header">
+    <h1>📦 Quản lý sản phẩm</h1>
+    <p>Danh sách toàn bộ sản phẩm trong hệ thống</p>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-inputs">
+        <input type="text" id="keyword" class="input" placeholder="Tìm theo tên sản phẩm...">
+        <select id="categoryFilter" class="input">
+            <option value="">Tất cả danh mục</option>
+        </select>
+        <select id="brandFilter" class="input">
+            <option value="">Tất cả thương hiệu</option>
+        </select>
+    </div>
+    <div class="filter-actions">
+        <button class="btn btn-secondary" onclick="searchProducts()">🔍 Tìm kiếm</button>
+        <button class="btn btn-success" onclick="addNewProduct()">+ Thêm sản phẩm</button>
+    </div>
+</div>
+
+<div class="admin-section">
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Hình ảnh</th>
+                    <th>Tên</th>
+                    <th>Danh mục</th>
+                            <th>Thương hiệu</th>
+                            <th>Tồn kho</th>
+                            <th>Giá</th>
+                            <th>Trạng thái</th>
+                            <th class="actions-col">Thao tác</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="productTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align:center; padding: 30px; color:#999;">
+                                Đang tải dữ liệu...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 {% endblock %}
 
-{% block content %}
-<div class="admin-header">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1>📷 Quản lý Sản phẩm</h1>
-                <p>Thêm, sửa, xóa và quản lý tồn kho sản phẩm</p>
-            </div>
-            <a href="{{ url_for('admin_products.create_product') }}" class="btn-create">
-                ➕ Thêm sản phẩm mới
-            </a>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-    <!-- Filters -->
-    <div class="filters-card">
-        <h5>Bộ lọc</h5>
-        <form method="GET" action="{{ url_for('admin_products.list_products') }}">
-            <div class="row">
-                <div class="col-md-3">
-                    <label>Danh mục</label>
-                    <select name="category_id" class="form-control">
-                        <option value="">Tất cả danh mục</option>
-                        {% for category in categories %}
-                        <option value="{{ category.id }}" 
-                                {% if request.args.get('category_id')|int == category.id %}selected{% endif %}>
-                            {{ category.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label>Thương hiệu</label>
-                    <select name="brand_id" class="form-control">
-                        <option value="">Tất cả thương hiệu</option>
-                        {% for brand in brands %}
-                        <option value="{{ brand.id }}"
-                                {% if request.args.get('brand_id')|int == brand.id %}selected{% endif %}>
-                            {{ brand.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label>Sắp xếp</label>
-                    <select name="sort" class="form-control">
-                        <option value="newest" {% if request.args.get('sort') == 'newest' %}selected{% endif %}>Mới nhất</option>
-                        <option value="oldest" {% if request.args.get('sort') == 'oldest' %}selected{% endif %}>Cũ nhất</option>
-                        <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
-                        <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
-                        <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>Tên A-Z</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label>Tìm kiếm</label>
-                    <input type="text" name="search" class="form-control" 
-                           placeholder="Tên sản phẩm..." 
-                           value="{{ request.args.get('search', '') }}">
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-12">
-                    <div class="form-check">
-                        <input type="checkbox" name="show_hidden" value="true" class="form-check-input" id="show_hidden"
-                               {% if show_hidden %}checked{% endif %}>
-                        <label class="form-check-label" for="show_hidden">
-                            Hiển thị sản phẩm đã ẩn
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Lọc</button>
-                    <a href="{{ url_for('admin_products.list_products') }}" class="btn btn-secondary">Đặt lại</a>
-                </div>
-            </div>
-        </form>
-    </div>
-    
-    <!-- Products Table -->
-    <div class="products-table-card">
-        {% if output and output.success %}
-        <h5>Danh sách sản phẩm ({{ output.total_products }} sản phẩm)</h5>
-        
-        {% if output.products %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Hình ảnh</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Danh mục</th>
-                        <th>Thương hiệu</th>
-                        <th>Giá</th>
-                        <th>Tồn kho</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in output.products %}
-                    <tr>
-                        <td>
-                            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-image">
-                        </td>
-                        <td>
-                            <strong>{{ product.name }}</strong><br>
-                            <small class="text-muted">ID: #{{ product.product_id }}</small>
-                        </td>
-                        <td>{{ product.category_name }}</td>
-                        <td>{{ product.brand_name }}</td>
-                        <td>{{ "{:,.0f}".format(product.price) }} ₫</td>
-                        <td>
-                            {% if product.stock_quantity <= 10 %}
-                            <span class="stock-low">{{ product.stock_quantity }}</span>
-                            {% else %}
-                            <span class="stock-ok">{{ product.stock_quantity }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if product.is_visible %}
-                            <span class="status-badge status-visible">Hiển thị</span>
-                            {% else %}
-                            <span class="status-badge status-hidden">Đã ẩn</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin_products.edit_product', product_id=product.product_id) }}" 
-                               class="btn btn-sm btn-warning btn-action">✏️ Sửa</a>
-                            
-                            <form method="POST" 
-                                  action="{{ url_for('admin_products.toggle_visibility', product_id=product.product_id) }}" 
-                                  style="display: inline;">
-                                {% if product.is_visible %}
-                                <button type="submit" class="btn btn-sm btn-secondary btn-action">👁️ Ẩn</button>
-                                {% else %}
-                                <button type="submit" class="btn btn-sm btn-info btn-action">👁️ Hiện</button>
-                                {% endif %}
-                            </form>
-                            
-                            <form method="POST" 
-                                  action="{{ url_for('admin_products.delete_product', product_id=product.product_id) }}" 
-                                  style="display: inline;"
-                                  onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                                <button type="submit" class="btn btn-sm btn-danger btn-action">🗑️ Xóa</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination -->
-        {% if output.total_pages > 1 %}
-        <nav>
-            <ul class="pagination justify-content-center">
-                {% if output.page > 1 %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_products.list_products', page=output.page-1, category_id=request.args.get('category_id'), brand_id=request.args.get('brand_id'), search=request.args.get('search'), sort=request.args.get('sort'), show_hidden=show_hidden) }}">
-                        « Trước
-                    </a>
-                </li>
-                {% endif %}
-                
-                {% for p in range(1, output.total_pages + 1) %}
-                    {% if p == output.page %}
-                    <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-                    {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('admin_products.list_products', page=p, category_id=request.args.get('category_id'), brand_id=request.args.get('brand_id'), search=request.args.get('search'), sort=request.args.get('sort'), show_hidden=show_hidden) }}">
-                            {{ p }}
-                        </a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if output.page < output.total_pages %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_products.list_products', page=output.page+1, category_id=request.args.get('category_id'), brand_id=request.args.get('brand_id'), search=request.args.get('search'), sort=request.args.get('sort'), show_hidden=show_hidden) }}">
-                        Sau »
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-        
-        {% else %}
-        <p class="text-center text-muted">Không tìm thấy sản phẩm nào</p>
-        {% endif %}
-        
-        {% else %}
-        <div class="alert alert-danger">
-            Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.
-        </div>
-        {% endif %}
-    </div>
-</div>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/products-admin.js') }}"></script>
 {% endblock %}

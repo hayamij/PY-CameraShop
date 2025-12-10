@@ -47,6 +47,7 @@ class TestPlaceOrderUseCase:
     def create_mock_product(self, product_id, name, price, stock, is_visible=True):
         """Helper tạo mock product"""
         product = Mock()
+        product.id = product_id
         product.product_id = product_id
         product.name = name
         
@@ -81,6 +82,7 @@ class TestPlaceOrderUseCase:
             # Default product mock with real Money price
             from app.domain.value_objects.money import Money
             mock_product = Mock()
+            mock_product.id = product_id
             mock_product.product_id = product_id
             mock_product.name = f"Product {product_id}"
             mock_product.price = Money(Decimal('1000000'), "VND")
@@ -456,6 +458,7 @@ class TestPlaceOrderUseCase:
         # Create cart item with product, but product_repository will return None
         from app.domain.value_objects.money import Money
         mock_product = Mock()
+        mock_product.id = 999
         mock_product.product_id = 999
         mock_product.price = Money(Decimal('5000000'), "VND")
         

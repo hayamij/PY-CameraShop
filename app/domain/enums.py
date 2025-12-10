@@ -63,7 +63,8 @@ class OrderStatus(Enum):
 class PaymentMethod(Enum):
     """Payment method enumeration"""
     CASH = "TIEN_MAT"
-    BANK_TRANSFER = "CHUYEN_KHOAN"
+    COD = "COD"  # Cash on Delivery
+    BANK_TRANSFER = "CHUYEN_KHOAN"  # Bank transfer / Chuyển khoản
     CREDIT_CARD = "THE_CREDIT"
     
     def __str__(self):

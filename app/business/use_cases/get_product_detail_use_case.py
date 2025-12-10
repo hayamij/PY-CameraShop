@@ -95,7 +95,7 @@ class GetProductDetailUseCase:
             
             return GetProductDetailOutputData(
                 success=True,
-                product_id=product.product_id,
+                product_id=product.id,  # Product entity uses .id, not .product_id
                 name=product.name,
                 description=product.description,
                 price=float(product.price.amount),

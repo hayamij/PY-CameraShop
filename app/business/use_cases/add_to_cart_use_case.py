@@ -84,7 +84,7 @@ class AddToCartUseCase:
             
             # Check if product already in cart
             existing_item = self.cart_repository.find_cart_item(
-                cart.cart_id,
+                cart.id,
                 input_data.product_id
             )
             
@@ -110,7 +110,7 @@ class AddToCartUseCase:
             else:
                 # Add new item to cart
                 cart_item = self.cart_repository.add_item_to_cart(
-                    cart.cart_id,
+                    cart.id,
                     input_data.product_id,
                     input_data.quantity
                 )
@@ -121,11 +121,13 @@ class AddToCartUseCase:
             # Get updated cart totals
             cart = self.cart_repository.find_by_user_id(input_data.user_id)
             total_items = sum(item.quantity for item in cart.items)
-            cart_total = cart.get_total()
+            # TODO: Calculate cart_total by fetching product prices
+            # For now, return 0 as Cart entity doesn't have price information
+            cart_total = 0
             
             return AddToCartOutputData(
                 success=True,
-                cart_id=cart.cart_id,
+                cart_id=cart.id,
                 cart_item_id=cart_item_id,
                 message=message,
                 total_items=total_items,

@@ -1,130 +1,182 @@
 """
-User Repository Adapter - Infrastructure implementation
-Converts between Domain entities and SQLAlchemy models
+User Repository Adapter - Infrastructure Implementation
+Implements IUserRepository port from Business layer
+
+⚠️  CRITICAL: This adapter MUST follow the port interface EXACTLY
+No modifications to business layer contracts!
 """
 from typing import Optional, List
-from decimal import Decimal
-from ...business.ports import IUserRepository
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+
+from ...business.ports.user_repository import IUserRepository
 from ...domain.entities import User
-from ...domain.value_objects import Email, PhoneNumber
 from ...domain.enums import UserRole
+from ...domain.value_objects import Email, PhoneNumber
 from ...domain.exceptions import UserAlreadyExistsException
 from ...infrastructure.database.models import UserModel
-from ...infrastructure.database.db import db
 
 
 class UserRepositoryAdapter(IUserRepository):
-    """Adapter implementing user repository using SQLAlchemy"""
+    """
+    User Repository Adapter (Infrastructure layer)
+    Converts between domain entities and database models
+    """
+    
+    def __init__(self, session: Session):
+        """
+        Initialize repository with database session
+        
+        Args:
+            session: SQLAlchemy session (scoped session for request lifecycle)
+        """
+        self._session = session
     
     def save(self, user: User) -> User:
-        """Save or update user"""
-        # Check for duplicates
-        if user.id is None:  # New user
-            if self.exists_by_username(user.username):
-                raise UserAlreadyExistsException(f"username '{user.username}'")
-            if self.exists_by_email(user.email):
-                raise UserAlreadyExistsException(f"email '{user.email.address}'")
-        
-        # Convert domain entity to database model
-        db_user = self._to_db_model(user)
-        
-        if user.id is None:
-            # Create new
-            db.session.add(db_user)
-        else:
-            # Update existing
-            existing = db.session.query(UserModel).filter_by(id=user.id).first()
-            if existing:
-                existing.username = db_user.username
-                existing.email = db_user.email
-                existing.password_hash = db_user.password_hash
-                existing.full_name = db_user.full_name
-                existing.phone_number = db_user.phone_number
-                existing.address = db_user.address
-                existing.role = db_user.role
-                existing.is_active = db_user.is_active
-        
-        db.session.commit()
-        
-        # Reload to get ID
-        if user.id is None:
-            db.session.refresh(db_user)
-        
-        return self._to_domain(db_user)
+        """Save user to database"""
+        try:
+            if user.id is None:
+                # Create new user
+                user_model = self._to_orm_model(user)
+                self._session.add(user_model)
+            else:
+                # Update existing user
+                user_model = self._session.query(UserModel).filter_by(user_id=user.id).first()
+                if not user_model:
+                    # User doesn't exist, create new
+                    user_model = self._to_orm_model(user)
+                    self._session.add(user_model)
+                else:
+                    # Update existing
+                    self._update_model_from_entity(user_model, user)
+            
+            self._session.commit()
+            self._session.refresh(user_model)
+            
+            return self._to_domain_entity(user_model)
+            
+        except IntegrityError as e:
+            self._session.rollback()
+            error_msg = str(e.orig).lower()
+            if 'username' in error_msg:
+                raise UserAlreadyExistsException(f"Username '{user.username}' already exists")
+            elif 'email' in error_msg:
+                raise UserAlreadyExistsException(f"Email '{user.email.address}' already exists")
+            else:
+                raise UserAlreadyExistsException("User with this username or email already exists")
+        except Exception as e:
+            self._session.rollback()
+            raise e
     
     def find_by_id(self, user_id: int) -> Optional[User]:
         """Find user by ID"""
-        db_user = db.session.query(UserModel).filter_by(id=user_id).first()
-        return self._to_domain(db_user) if db_user else None
+        user_model = self._session.query(UserModel).filter_by(user_id=user_id).first()
+        if user_model:
+            return self._to_domain_entity(user_model)
+        return None
     
     def find_by_username(self, username: str) -> Optional[User]:
         """Find user by username"""
-        db_user = db.session.query(UserModel).filter_by(username=username).first()
-        return self._to_domain(db_user) if db_user else None
+        user_model = self._session.query(UserModel).filter_by(username=username).first()
+        if user_model:
+            return self._to_domain_entity(user_model)
+        return None
     
     def find_by_email(self, email: Email) -> Optional[User]:
         """Find user by email"""
-        db_user = db.session.query(UserModel).filter_by(email=email.address).first()
-        return self._to_domain(db_user) if db_user else None
+        user_model = self._session.query(UserModel).filter_by(email=email.address).first()
+        if user_model:
+            return self._to_domain_entity(user_model)
+        return None
     
     def find_all(self, skip: int = 0, limit: int = 100) -> List[User]:
         """Find all users with pagination"""
-        db_users = db.session.query(UserModel).offset(skip).limit(limit).all()
-        return [self._to_domain(db_user) for db_user in db_users]
+        user_models = self._session.query(UserModel).offset(skip).limit(limit).all()
+        return [self._to_domain_entity(model) for model in user_models]
     
     def find_by_role(self, role: str, skip: int = 0, limit: int = 100) -> List[User]:
         """Find users by role"""
-        db_users = db.session.query(UserModel).filter_by(role=role).offset(skip).limit(limit).all()
-        return [self._to_domain(db_user) for db_user in db_users]
+        # Map role string to role_id
+        role_map = {'ADMIN': 1, 'CUSTOMER': 2}
+        role_id = role_map.get(role.upper(), 2)
+        
+        user_models = self._session.query(UserModel).filter_by(role_id=role_id).offset(skip).limit(limit).all()
+        return [self._to_domain_entity(model) for model in user_models]
     
     def delete(self, user_id: int) -> bool:
         """Delete user"""
-        db_user = db.session.query(UserModel).filter_by(id=user_id).first()
-        if db_user:
-            db.session.delete(db_user)
-            db.session.commit()
+        user_model = self._session.query(UserModel).filter_by(user_id=user_id).first()
+        if user_model:
+            self._session.delete(user_model)
+            self._session.commit()
             return True
         return False
     
     def exists_by_username(self, username: str) -> bool:
         """Check if username exists"""
-        return db.session.query(UserModel).filter_by(username=username).first() is not None
+        count = self._session.query(UserModel).filter_by(username=username).count()
+        return count > 0
     
     def exists_by_email(self, email: Email) -> bool:
         """Check if email exists"""
-        return db.session.query(UserModel).filter_by(email=email.address).first() is not None
+        count = self._session.query(UserModel).filter_by(email=email.address).count()
+        return count > 0
     
     def count(self) -> int:
         """Count total users"""
-        return db.session.query(UserModel).count()
+        return self._session.query(UserModel).count()
     
-    # Conversion methods
-    def _to_domain(self, db_user: UserModel) -> User:
-        """Convert database model to domain entity"""
+    # ========================================================================
+    # CONVERSION METHODS (Domain Entity ↔ ORM Model)
+    # ========================================================================
+    
+    def _to_domain_entity(self, model: UserModel) -> User:
+        """
+        Convert ORM model to domain entity
+        Uses User.reconstruct() to bypass validation
+        """
         return User.reconstruct(
-            user_id=db_user.id,
-            username=db_user.username,
-            email=Email(db_user.email),
-            password_hash=db_user.password_hash,
-            full_name=db_user.full_name,
-            phone_number=PhoneNumber(db_user.phone_number) if db_user.phone_number else None,
-            address=db_user.address,
-            role=UserRole(db_user.role),
-            is_active=db_user.is_active,
-            created_at=db_user.created_at
+            user_id=model.user_id,
+            username=model.username,
+            email=Email(model.email),
+            password_hash=model.password_hash,
+            full_name=model.full_name,
+            phone_number=PhoneNumber(model.phone_number) if model.phone_number else None,
+            address=model.address,
+            role=UserRole.ADMIN if model.role_id == 1 else UserRole.CUSTOMER,
+            is_active=model.is_active,
+            created_at=model.created_at
         )
     
-    def _to_db_model(self, user: User) -> UserModel:
-        """Convert domain entity to database model"""
+    def _to_orm_model(self, entity: User) -> UserModel:
+        """
+        Convert domain entity to ORM model (for new entities)
+        """
+        # Map role enum to role_id
+        role_id = 1 if entity.role == UserRole.ADMIN else 2
+        
         return UserModel(
-            id=user.id,
-            username=user.username,
-            email=user.email.address,
-            password_hash=user.password_hash,
-            full_name=user.full_name,
-            phone_number=user.phone_number.number if user.phone_number else None,
-            address=user.address,
-            role=user.role.value,
-            is_active=user.is_active,
-            created_at=user.created_at
+            user_id=entity.id if entity.id else None,
+            username=entity.username,
+            email=entity.email.address,
+            password_hash=entity.password_hash,
+            full_name=entity.full_name,
+            phone_number=entity.phone_number.number if entity.phone_number else None,
+            address=entity.address,
+            role_id=role_id,
+            is_active=entity.is_active,
+            created_at=entity.created_at
         )
+    
+    def _update_model_from_entity(self, model: UserModel, entity: User):
+        """
+        Update existing ORM model from domain entity
+        """
+        model.username = entity.username
+        model.email = entity.email.address
+        model.password_hash = entity.password_hash
+        model.full_name = entity.full_name
+        model.phone_number = entity.phone_number.number if entity.phone_number else None
+        model.address = entity.address
+        model.role_id = 1 if entity.role == UserRole.ADMIN else 2
+        model.is_active = entity.is_active

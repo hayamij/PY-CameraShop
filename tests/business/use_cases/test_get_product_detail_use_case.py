@@ -43,10 +43,12 @@ class TestGetProductDetailUseCase:
         """Test 1: Lấy chi tiết sản phẩm thành công"""
         # Arrange
         mock_product = Mock()
+        mock_product.id = 1
         mock_product.product_id = 1  # product_id, not id
         mock_product.name = "Canon EOS R5"
         mock_product.description = "Máy ảnh mirrorless full-frame"
         mock_product.price = Mock()
+        mock_product.id = 1  # Product entity uses .id property
         mock_product.price.amount = Decimal("89000000")
         mock_product.price.currency = "VND"
         mock_product.category_id = 1
@@ -92,6 +94,7 @@ class TestGetProductDetailUseCase:
         """Test 2: Sản phẩm có đầy đủ tất cả các field"""
         # Arrange
         mock_product = Mock()
+        mock_product.id = 2
         mock_product.product_id = 2
         mock_product.name = "Sony A7IV"
         mock_product.description = "Camera full-frame với khả năng quay video 4K"
@@ -187,6 +190,7 @@ class TestGetProductDetailUseCase:
         """Test 5: Lấy chi tiết sản phẩm hidden (vẫn trả về nếu truy cập trực tiếp)"""
         # Arrange
         mock_product = Mock()
+        mock_product.id = 5
         mock_product.product_id = 5
         mock_product.name = "Hidden Product"
         mock_product.description = "This product is hidden"
@@ -360,6 +364,7 @@ class TestGetProductDetailUseCase:
         """Test 13: Giá sản phẩm được convert sang float"""
         # Arrange
         mock_product = Mock()
+        mock_product.id = 13
         mock_product.product_id = 13
         mock_product.name = "Price Test"
         mock_product.description = "Test decimal price"
@@ -418,6 +423,7 @@ class TestGetProductDetailUseCase:
         """Test 15: Kiểm tra cấu trúc output data"""
         # Arrange
         mock_product = Mock()
+        mock_product.id = 15
         mock_product.product_id = 15
         mock_product.name = "Structure Test"
         mock_product.description = "Test structure"

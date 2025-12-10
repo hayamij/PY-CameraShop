@@ -1,384 +1,149 @@
-{% extends "base.html" %}
+{% extends 'admin_base.html' %}
 
 {% block title %}Admin Dashboard - Camera Shop{% endblock %}
 
-{% block extra_css %}
-<style>
-    .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem 0;
-        margin-bottom: 2rem;
-    }
-    
-    .metric-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 12px rgba(0,0,0,0.15);
-    }
-    
-    .metric-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .metric-value {
-        font-size: 2rem;
-        font-weight: bold;
-        margin: 0.5rem 0;
-    }
-    
-    .metric-label {
-        color: #6c757d;
-        font-size: 0.875rem;
-        margin: 0;
-    }
-    
-    .icon-revenue {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-    
-    .icon-orders {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-    }
-    
-    .icon-products {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-    }
-    
-    .icon-customers {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        color: white;
-    }
-    
-    .icon-pending {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        color: white;
-    }
-    
-    .chart-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
-    }
-    
-    .chart-card h5 {
-        margin-bottom: 1.5rem;
-        color: #667eea;
-        font-weight: 600;
-    }
-    
-    .table-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
-    }
-    
-    .table-card h5 {
-        margin-bottom: 1rem;
-        color: #667eea;
-        font-weight: 600;
-    }
-    
-    .badge-status {
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-    }
-    
-    .alert-card {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-    }
-    
-    .low-stock-badge {
-        background-color: #dc3545;
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-    }
-    
-    .time-filter {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .time-filter a {
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        text-decoration: none;
-        background: #f8f9fa;
-        color: #667eea;
-        transition: all 0.3s;
-    }
-    
-    .time-filter a:hover {
-        background: #667eea;
-        color: white;
-    }
-    
-    .time-filter a.active {
-        background: #667eea;
-        color: white;
-    }
-</style>
-{% endblock %}
+{% block admin_content %}
+<div class="admin-header">
+    <h1>📊 Dashboard</h1>
+    <p>Thống kê tổng quan hệ thống</p>
+</div>
 
-{% block content %}
-<div class="dashboard-header">
-    <div class="container">
-        <h1>📊 Admin Dashboard</h1>
-        <p>Tổng quan & Phân tích Dữ liệu</p>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+            <div class="stat-label">Tổng doanh thu</div>
+            <div class="stat-value" id="totalRevenue">0 ₫</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+            <div class="stat-label">Tổng sản phẩm</div>
+            <div class="stat-value" id="totalProducts">0</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <div class="stat-label">Người dùng</div>
+            <div class="stat-value" id="totalUsers">0</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">🛒</div>
+        <div class="stat-info">
+            <div class="stat-label">Đơn hàng chờ</div>
+            <div class="stat-value" id="pendingOrders">0</div>
+        </div>
     </div>
 </div>
 
-<div class="container">
-    {% if output %}
-    <!-- Time Filter -->
-    <div class="time-filter">
-        <a href="{{ url_for('admin_dashboard.dashboard', days=7) }}" 
-           class="{% if days == 7 %}active{% endif %}">7 ngày</a>
-        <a href="{{ url_for('admin_dashboard.dashboard', days=30) }}" 
-           class="{% if days == 30 %}active{% endif %}">30 ngày</a>
-        <a href="{{ url_for('admin_dashboard.dashboard', days=90) }}" 
-           class="{% if days == 90 %}active{% endif %}">90 ngày</a>
-        <a href="{{ url_for('admin_dashboard.dashboard', days=365) }}" 
-           class="{% if days == 365 %}active{% endif %}">1 năm</a>
+<section class="admin-section" id="products">
+    <div class="section-header">
+        <h2 class="section-title">Sản phẩm gần đây</h2>
+        <a href="{{ url_for('views.admin_products') }}" class="btn btn-primary">➕ Quản lý sản phẩm</a>
     </div>
-    
-    <!-- Metric Cards -->
-    <div class="row">
-        <div class="col-md-4 col-lg-2">
-            <div class="metric-card">
-                <div class="metric-icon icon-revenue">💰</div>
-                <h3 class="metric-value">{{ "{:,.0f}".format(output.total_revenue) }} ₫</h3>
-                <p class="metric-label">Tổng Doanh thu</p>
-            </div>
-        </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="metric-card">
-                <div class="metric-icon icon-orders">📦</div>
-                <h3 class="metric-value">{{ output.total_orders }}</h3>
-                <p class="metric-label">Tổng Đơn hàng</p>
-            </div>
-        </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="metric-card">
-                <div class="metric-icon icon-products">📷</div>
-                <h3 class="metric-value">{{ output.total_products }}</h3>
-                <p class="metric-label">Sản phẩm</p>
-            </div>
-        </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="metric-card">
-                <div class="metric-icon icon-customers">👥</div>
-                <h3 class="metric-value">{{ output.total_customers }}</h3>
-                <p class="metric-label">Khách hàng</p>
-            </div>
-        </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="metric-card">
-                <div class="metric-icon icon-pending">⏳</div>
-                <h3 class="metric-value">{{ output.pending_orders }}</h3>
-                <p class="metric-label">Đơn chờ xác nhận</p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Charts Row 1 -->
-    <div class="row">
-        <div class="col-md-8">
-            <div class="chart-card">
-                <h5>📈 Xu hướng Doanh thu ({{ days }} ngày)</h5>
-                {% if revenue_chart %}
-                    {{ revenue_chart|safe }}
-                {% else %}
-                    <p class="text-muted text-center">Không có dữ liệu doanh thu</p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="chart-card">
-                <h5>🎯 Trạng thái Đơn hàng</h5>
-                {% if status_chart %}
-                    {{ status_chart|safe }}
-                {% else %}
-                    <p class="text-muted text-center">Không có dữ liệu đơn hàng</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Charts Row 2 -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="chart-card">
-                <h5>🏷️ Doanh thu theo Danh mục</h5>
-                {% if category_chart %}
-                    {{ category_chart|safe }}
-                {% else %}
-                    <p class="text-muted text-center">Không có dữ liệu danh mục</p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="chart-card">
-                <h5>🏆 Top 10 Sản phẩm Bán chạy</h5>
-                {% if top_products_chart %}
-                    {{ top_products_chart|safe }}
-                {% else %}
-                    <p class="text-muted text-center">Không có dữ liệu sản phẩm</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Tables Row -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="table-card">
-                <h5>📋 Đơn hàng Gần đây</h5>
-                {% if output.recent_orders %}
-                <table class="table table-hover">
+    <div class="table-wrapper">
+        <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Mã đơn</th>
-                            <th>Khách hàng</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
+                            <th>Mã SP</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên xe</th>
+                            <th>Hãng</th>
+                            <th>Dòng xe</th>
+                            <th>Dung tích (cc)</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for order in output.recent_orders %}
+
+                    <tbody id="cameraTableBody">
                         <tr>
-                            <td><a href="{{ url_for('admin_orders.order_detail', order_id=order.order_id) }}">#{{ order.order_id }}</a></td>
-                            <td>{{ order.customer_name }}</td>
-                            <td>{{ "{:,.0f}".format(order.total) }} ₫</td>
-                            <td>
-                                {% if order.status == 'CHO_XAC_NHAN' %}
-                                <span class="badge bg-warning">Chờ xác nhận</span>
-                                {% elif order.status == 'DANG_GIAO' %}
-                                <span class="badge bg-info">Đang giao</span>
-                                {% elif order.status == 'HOAN_THANH' %}
-                                <span class="badge bg-success">Hoàn thành</span>
-                                {% elif order.status == 'DA_HUY' %}
-                                <span class="badge bg-danger">Đã hủy</span>
-                                {% endif %}
+                            <td colspan="10" style="text-align:center; padding: 30px; color:#999;">
+                                Đang tải dữ liệu...
                             </td>
                         </tr>
-                        {% endfor %}
                     </tbody>
+
+
                 </table>
-                <a href="{{ url_for('admin_orders.list_orders') }}" class="btn btn-sm btn-primary">Xem tất cả →</a>
-                {% else %}
-                <p class="text-muted text-center">Không có đơn hàng nào</p>
-                {% endif %}
             </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="table-card">
-                <h5>⚠️ Cảnh báo Tồn kho Thấp</h5>
-                {% if output.low_stock_products %}
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>Danh mục</th>
-                            <th>Tồn kho</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in output.low_stock_products[:10] %}
-                        <tr>
-                            <td>{{ product.name }}</td>
-                            <td>{{ product.category }}</td>
-                            <td>
-                                <span class="low-stock-badge">{{ product.stock }}</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="alert alert-success">
-                    <strong>✓ Tốt!</strong> Tất cả sản phẩm đều có đủ tồn kho
-                </div>
-                {% endif %}
-            </div>
-        </div>
+        </section>
+
+            <thead>
+                <tr>
+                    <th>Mã SP</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="productsTableBody">
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 30px; color: #999;">Đang tải...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-    
-    {% else %}
-    <div class="alert alert-warning">
-        <strong>⚠️ Không thể tải dữ liệu dashboard</strong><br>
-        Vui lòng thử lại sau hoặc liên hệ quản trị viên hệ thống.
+</section>
+
+<section class="admin-section" id="orders">
+    <div class="section-header">
+        <h2 class="section-title">Đơn hàng gần đây</h2>
+        <a href="{{ url_for('views.admin_orders') }}" class="btn btn-secondary">📋 Xem tất cả</a>
     </div>
-    {% endif %}
-    
-    <!-- Quick Actions -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="chart-card">
-                <h5>⚡ Thao tác Nhanh</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{{ url_for('admin_orders.list_orders') }}" class="btn btn-primary">
-                        📦 Quản lý Đơn hàng
-                    </a>
-                    <a href="{{ url_for('admin.products') }}" class="btn btn-success">
-                        📷 Quản lý Sản phẩm
-                    </a>
-                    <a href="{{ url_for('admin.users') }}" class="btn btn-info">
-                        👥 Quản lý Khách hàng
-                    </a>
-                    <a href="{{ url_for('admin.categories') }}" class="btn btn-warning">
-                        🏷️ Quản lý Danh mục
-                    </a>
-                </div>
-            </div>
-        </div>
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Mã DH</th>
+                    <th>Khách hàng</th>
+                    <th>Trạng thái</th>
+                    <th>Tổng tiền</th>
+                    <th>Ngày đặt</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 30px; color: #999;">Đang tải...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-</div>
+</section>
+
+<section class="admin-section" id="users">
+    <div class="section-header">
+        <h2 class="section-title">Người dùng gần đây</h2>
+        <a href="#" class="btn btn-secondary">👥 Quản lý người dùng</a>
+    </div>
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 30px; color: #999;">Đang tải...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Auto-refresh stats every 5 minutes
-    setInterval(function() {
-        fetch('{{ url_for("admin_dashboard.quick_stats") }}')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Dashboard stats refreshed');
-                }
-            })
-            .catch(error => console.error('Error refreshing stats:', error));
-    }, 300000); // 5 minutes
-</script>
+<script src="{{ url_for('static', filename='js/home-admin.js?v=2') }}"></script>
 {% endblock %}
