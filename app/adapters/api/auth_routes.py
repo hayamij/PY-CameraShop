@@ -63,8 +63,8 @@ def register():
         400: {"success": false, "error": "message"}
     """
     try:
-        # Parse request JSON
-        data = request.get_json()
+        # Parse request JSON (silent=True to avoid 415 errors)
+        data = request.get_json(silent=True)
         
         # Check if JSON data exists
         if not data:
@@ -255,17 +255,19 @@ def get_current_user():
                 'error': 'User not found'
             }), 401
         
+        # Extract user entity from output
+        user = output.user
         return jsonify({
             'success': True,
             'user': {
-                'id': output.user_id,
-                'username': output.username,
-                'email': output.email,
-                'full_name': output.full_name,
-                'role': output.role,
-                'phone_number': output.phone_number,
-                'address': output.address,
-                'is_active': output.is_active
+                'id': user.id,
+                'username': user.username,
+                'email': str(user.email),  # Convert Email value object to string
+                'full_name': user.full_name,
+                'role': str(user.role),  # Convert UserRole enum to string
+                'phone_number': str(user.phone_number) if user.phone_number else None,  # Convert PhoneNumber value object
+                'address': user.address,
+                'is_active': user.is_active
             }
         }), 200
         

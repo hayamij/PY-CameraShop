@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Camera Shop{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="header-logo">CAMERA SHOP</a>
+                <nav class="header-nav">
+                    <a href="/">HOME</a>
+                    <a href="/products">PRODUCTS</a>
+                    {% if session.get('user_id') %}
+                        <a href="/cart">CART</a>
+                        <a href="/orders">ORDERS</a>
+                        {% if session.get('role') == 'ADMIN' %}
+                            <a href="/admin">ADMIN</a>
+                        {% endif %}
+                        <a href="#" onclick="logout()">LOGOUT</a>
+                    {% else %}
+                        <a href="/login">LOGIN</a>
+                        <a href="/register">REGISTER</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="min-height: calc(100vh - 300px); padding: var(--spacing-xxl) var(--spacing-lg);">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">CAMERA SHOP - PROFESSIONAL PHOTOGRAPHY EQUIPMENT</p>
+                <p class="footer-text mt-sm">CLEAN ARCHITECTURE | 2025</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

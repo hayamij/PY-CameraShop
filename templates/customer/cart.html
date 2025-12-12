@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-xl">
+    <h1>SHOPPING CART</h1>
+</div>
+
+<div class="grid grid-3 gap-xl">
+    <div style="grid-column: span 2;">
+        <div id="cartItems" class="card">
+            <!-- Cart items will be loaded here -->
+        </div>
+    </div>
+    <div>
+        <div class="card">
+            <div class="card-header">ORDER SUMMARY</div>
+            <div class="card-body">
+                <div class="d-flex justify-between mb-md">
+                    <span>SUBTOTAL:</span>
+                    <span id="subtotal" class="font-weight-bold">$0.00</span>
+                </div>
+                <div class="d-flex justify-between mb-md">
+                    <span>TAX (10%):</span>
+                    <span id="tax" class="font-weight-bold">$0.00</span>
+                </div>
+                <div class="d-flex justify-between mb-md">
+                    <span>SHIPPING:</span>
+                    <span id="shipping" class="font-weight-bold">$0.00</span>
+                </div>
+                <div class="border-top pt-md">
+                    <div class="d-flex justify-between">
+                        <span class="font-weight-bold">TOTAL:</span>
+                        <span id="total" class="font-weight-bold" style="font-size: var(--font-size-lg);">$0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-block" onclick="proceedToCheckout()">PROCEED TO CHECKOUT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+let cartData = null;
+
+async function loadCart() {
+    try {
+        showLoading();
+        const response = await API.cart.view();
+        hideLoading();
+        
+        if (response.success) {
+            cartData = response.cart;
+            displayCart(cartData);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function displayCart(cart) {
+    const container = document.getElementById('cartItems');
+    
+    if (!cart.items || cart.items.length === 0) {
+        container.innerHTML = `
+            <div class="card-body text-center p-xl">
+                <h3 class="mb-md">YOUR CART IS EMPTY</h3>
+                <a href="/products" class="btn">CONTINUE SHOPPING</a>
+            </div>
+        `;
+        updateSummary(0, 0, 0, 0);
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>PRODUCT</th>
+                        <th>PRICE</th>
+                        <th>QUANTITY</th>
+                        <th>SUBTOTAL</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${cart.items.map(item => `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-center gap-md">
+                                    <img src="${item.image_url || '/static/images/placeholder.jpg'}" 
+                                         alt="${item.product_name}" 
+                                         style="width: 60px; height: 60px; object-fit: cover; border: 1px solid var(--color-border);">
+                                    <div>
+                                        <p class="font-weight-bold">${item.product_name}</p>
+                                        ${item.is_available ? '' : '<p class="text-error">OUT OF STOCK</p>'}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${formatCurrency(item.unit_price)}</td>
+                            <td>
+                                <input type="number" 
+                                       value="${item.quantity}" 
+                                       min="1" 
+                                       max="${item.available_stock}"
+                                       style="width: 80px;" 
+                                       class="form-control"
+                                       onchange="updateQuantity(${item.cart_item_id}, this.value)">
+                            </td>
+                            <td class="font-weight-bold">${formatCurrency(item.subtotal)}</td>
+                            <td>
+                                <button class="btn btn-outline" onclick="removeItem(${item.cart_item_id})">REMOVE</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    updateSummary(cart.subtotal, cart.tax, cart.shipping, cart.total);
+}
+
+function updateSummary(subtotal, tax, shipping, total) {
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('tax').textContent = formatCurrency(tax);
+    document.getElementById('shipping').textContent = formatCurrency(shipping);
+    document.getElementById('total').textContent = formatCurrency(total);
+}
+
+async function updateQuantity(cartItemId, newQuantity) {
+    try {
+        showLoading();
+        const response = await API.cart.update(cartItemId, parseInt(newQuantity));
+        hideLoading();
+        
+        if (response.success) {
+            loadCart();
+            showAlert('Cart updated', 'success');
+        } else {
+            showAlert(response.error, 'error');
+            loadCart();
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+        loadCart();
+    }
+}
+
+async function removeItem(cartItemId) {
+    if (!confirm('Remove this item from cart?')) return;
+    
+    try {
+        showLoading();
+        const response = await API.cart.remove(cartItemId);
+        hideLoading();
+        
+        if (response.success) {
+            loadCart();
+            showAlert('Item removed', 'success');
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function proceedToCheckout() {
+    if (!cartData || !cartData.items || cartData.items.length === 0) {
+        showAlert('Your cart is empty', 'error');
+        return;
+    }
+    window.location.href = '/checkout';
+}
+
+window.updateQuantity = updateQuantity;
+window.removeItem = removeItem;
+window.proceedToCheckout = proceedToCheckout;
+
+loadCart();
+
+});
+</script>
+{% endblock %}

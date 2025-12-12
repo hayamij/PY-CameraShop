@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Order Detail - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-lg">
+    <a href="/orders" class="btn btn-outline">← BACK TO ORDERS</a>
+</div>
+
+<div id="orderDetail">
+    <!-- Order detail will be loaded here -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+const orderId = window.location.pathname.split('/').pop();
+
+async function loadOrderDetail() {
+    try {
+        showLoading();
+        const response = await API.orders.getDetail(orderId);
+        hideLoading();
+        
+        if (response.success) {
+            displayOrder(response.order);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function displayOrder(order) {
+    const container = document.getElementById('orderDetail');
+    
+    container.innerHTML = `
+        <div class="card mb-lg">
+            <div class="card-header d-flex justify-between align-center">
+                <h2>ORDER #${order.order_id}</h2>
+                <span class="font-weight-bold text-uppercase">${order.status}</span>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3 gap-xl mb-xl">
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-sm">ORDER DATE</p>
+                        <p>${formatDate(order.order_date)}</p>
+                    </div>
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-sm">PAYMENT METHOD</p>
+                        <p>${order.payment_method.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-sm">TOTAL AMOUNT</p>
+                        <p class="font-weight-bold" style="font-size: var(--font-size-lg);">
+                            ${formatCurrency(order.total_amount)}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2 gap-xl mb-xl border-top pt-xl">
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-sm">SHIPPING ADDRESS</p>
+                        <p>${order.shipping_address}</p>
+                    </div>
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-sm">PHONE NUMBER</p>
+                        <p>${order.customer_phone}</p>
+                    </div>
+                </div>
+                
+                <div class="border-top pt-xl">
+                    <p class="font-weight-bold text-uppercase mb-md">ORDER ITEMS</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>PRODUCT</th>
+                                <th>QUANTITY</th>
+                                <th>UNIT PRICE</th>
+                                <th>SUBTOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${order.items.map(item => `
+                                <tr>
+                                    <td>${item.product_name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${formatCurrency(item.unit_price)}</td>
+                                    <td class="font-weight-bold">${formatCurrency(item.subtotal)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr class="border-top">
+                                <td colspan="3" class="text-right font-weight-bold">SUBTOTAL:</td>
+                                <td class="font-weight-bold">${formatCurrency(order.subtotal)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-bold">TAX:</td>
+                                <td class="font-weight-bold">${formatCurrency(order.tax)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-bold">SHIPPING:</td>
+                                <td class="font-weight-bold">${formatCurrency(order.shipping_fee)}</td>
+                            </tr>
+                            <tr class="border-top">
+                                <td colspan="3" class="text-right font-weight-bold" style="font-size: var(--font-size-lg);">TOTAL:</td>
+                                <td class="font-weight-bold" style="font-size: var(--font-size-lg);">${formatCurrency(order.total_amount)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            ${order.status === 'CHO_XAC_NHAN' ? `
+                <div class="card-footer">
+                    <button class="btn btn-outline" onclick="cancelOrder()">CANCEL ORDER</button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+async function cancelOrder() {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    
+    try {
+        showLoading();
+        const response = await API.orders.cancel(parseInt(orderId));
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Order cancelled successfully', 'success');
+            loadOrderDetail();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+window.cancelOrder = cancelOrder;
+
+loadOrderDetail();
+
+});
+</script>
+{% endblock %}
+

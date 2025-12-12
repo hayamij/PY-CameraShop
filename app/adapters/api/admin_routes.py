@@ -1,5 +1,12 @@
 """Admin routes for product/category/brand/order management"""
 from flask import Blueprint, request, jsonify, session
+from app.domain.exceptions import (
+    ValidationException,
+    CategoryNotFoundException,
+    CategoryAlreadyExistsException,
+    BrandNotFoundException,
+    BrandAlreadyExistsException
+)
 from app.business.use_cases.list_users_use_case import (
     ListUsersUseCase,
     ListUsersInputData
@@ -674,6 +681,11 @@ def create_admin_routes(
                 'message': output_data.message
             }), 200
             
+        except (CategoryNotFoundException, ValidationException, CategoryAlreadyExistsException) as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 400
         except Exception as e:
             return jsonify({
                 'success': False,
@@ -784,6 +796,11 @@ def create_admin_routes(
                 'message': output_data.message
             }), 200
             
+        except (BrandNotFoundException, ValidationException, BrandAlreadyExistsException) as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 400
         except Exception as e:
             return jsonify({
                 'success': False,
@@ -856,18 +873,20 @@ def create_admin_routes(
                         'order_id': o.order_id,
                         'customer_id': o.customer_id,
                         'customer_name': o.customer_name,
+                        'customer_email': o.customer_email,
                         'total_amount': o.total_amount,
-                        'order_status': o.status,  # Fixed: Use 'status' not 'order_status'
+                        'status': o.status,
                         'payment_method': o.payment_method,
-                        'created_at': o.order_date.isoformat() if o.order_date else None,  # Fixed: Use 'order_date' not 'created_at'
+                        'order_date': o.order_date.isoformat() if o.order_date else None,
                         'item_count': o.item_count
                     }
                     for o in output_data.orders
                 ],
                 'total_orders': output_data.total_orders,
                 'total_pages': output_data.total_pages,
-                'current_page': output_data.page,  # Fixed: Use 'page' not 'current_page'
-                'statistics': {  # Fixed: Build statistics object from individual properties
+                'page': output_data.page,
+                'per_page': output_data.per_page,
+                'statistics': {
                     'total_revenue': output_data.total_revenue,
                     'pending_count': output_data.pending_count,
                     'shipping_count': output_data.shipping_count,

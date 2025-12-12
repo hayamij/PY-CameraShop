@@ -55,8 +55,7 @@ class CategoryRepositoryAdapter(ICategoryRepository):
     def find_all(self, active_only: bool = True) -> List[Category]:
         """Find all categories"""
         query = self._session.query(CategoryModel)
-        if active_only:
-            query = query.filter(CategoryModel.is_active == True)
+        # Note: categories table does not have is_active column in SQL Server schema
         category_models = query.all()
         return [self._to_domain_entity(model) for model in category_models]
     
@@ -83,7 +82,6 @@ class CategoryRepositoryAdapter(ICategoryRepository):
             category_id=model.category_id,
             name=model.name,
             description=model.description,
-            is_active=model.is_active,
             created_at=model.created_at
         )
     

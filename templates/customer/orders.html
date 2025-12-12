@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-xl">
+    <h1>MY ORDERS</h1>
+</div>
+
+<div class="card mb-lg">
+    <div class="card-body">
+        <div class="d-flex gap-md">
+            <button class="btn btn-outline" onclick="filterOrders('')">ALL</button>
+            <button class="btn btn-outline" onclick="filterOrders('PENDING')">PENDING</button>
+            <button class="btn btn-outline" onclick="filterOrders('SHIPPING')">SHIPPING</button>
+            <button class="btn btn-outline" onclick="filterOrders('COMPLETED')">COMPLETED</button>
+            <button class="btn btn-outline" onclick="filterOrders('CANCELLED')">CANCELLED</button>
+        </div>
+    </div>
+</div>
+
+<div id="ordersList">
+    <!-- Orders will be loaded here -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+let currentStatus = '';
+
+async function loadOrders(status = '') {
+    currentStatus = status;
+    try {
+        showLoading();
+        const response = await API.orders.getMyOrders(status || null);
+        hideLoading();
+        
+        if (response.success) {
+            displayOrders(response.orders);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function displayOrders(orders) {
+    const container = document.getElementById('ordersList');
+    
+    if (orders.length === 0) {
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-body text-center p-xl">
+                    <h3>NO ORDERS FOUND</h3>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = orders.map(order => `
+        <div class="card mb-lg">
+            <div class="card-header d-flex justify-between align-center">
+                <div>
+                    <span class="font-weight-bold">ORDER #${order.order_id}</span>
+                    <span class="ml-md text-secondary">${formatDate(order.order_date)}</span>
+                </div>
+                <span class="font-weight-bold text-uppercase">${order.status}</span>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-3 gap-lg">
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-xs">ITEMS</p>
+                        ${order.items && order.items.length > 0 ? order.items.map(item => `
+                            <p class="text-secondary">${item.quantity}x ${item.product_name}</p>
+                        `).join('') : `<p class="text-secondary">${order.item_count || 0} items</p>`}
+                    </div>
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-xs">TOTAL AMOUNT</p>
+                        <p class="font-weight-bold" style="font-size: var(--font-size-lg);">
+                            ${formatCurrency(order.total_amount)}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-weight-bold text-uppercase mb-xs">PAYMENT METHOD</p>
+                        <p>${order.payment_method.replace('_', ' ')}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-between">
+                <a href="/orders/${order.order_id}" class="btn btn-outline">VIEW DETAILS</a>
+                ${order.status === 'CHO_XAC_NHAN' ? `
+                    <button class="btn btn-outline" onclick="cancelOrder(${order.order_id})">CANCEL ORDER</button>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+async function cancelOrder(orderId) {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    
+    try {
+        showLoading();
+        const response = await API.orders.cancel(orderId);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Order cancelled successfully', 'success');
+            loadOrders(currentStatus);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function filterOrders(status) {
+    loadOrders(status);
+}
+
+window.filterOrders = filterOrders;
+window.cancelOrder = cancelOrder;
+
+loadOrders();
+
+});
+</script>
+{% endblock %}

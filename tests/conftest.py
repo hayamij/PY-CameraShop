@@ -84,7 +84,9 @@ def db_session(test_engine):
     
     session.close()
     Session.remove()
-    transaction.rollback()
+    # Check if transaction is still active before rollback
+    if transaction.is_active:
+        transaction.rollback()
     connection.close()
 
 
@@ -231,3 +233,24 @@ def sample_order(order_repository, sample_user, sample_product):
     )
     
     return order_repository.save(order)
+
+
+# API test fixtures
+@pytest.fixture
+def sample_user_data():
+    """Sample user data for API tests"""
+    return {
+        'username': 'testuser',
+        'email': 'test@example.com',
+        'password': 'SecurePassword123',
+        'full_name': 'Test User',
+        'phone_number': '0987654321',
+        'address': '123 Test Street'
+    }
+
+
+@pytest.fixture
+def clean_db(app):
+    """Clean database before test"""
+    # Database is already fresh for each test due to function scope
+    yield

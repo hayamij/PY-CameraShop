@@ -4,6 +4,10 @@ Configuration management for different environments
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (critical for reloader subprocess)
+load_dotenv()
 
 
 class Config:
@@ -12,16 +16,28 @@ class Config:
     # Flask settings
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     
-    # Database settings - MUST use absolute path
-    BASE_DIR = Path(__file__).parent.parent.parent.parent.resolve()
-    INSTANCE_DIR = BASE_DIR / 'instance'
-    # Ensure absolute path for database
-    DB_PATH = INSTANCE_DIR / 'camerashop.db'
+    # SQL Server Database settings
+    SQL_SERVER = os.getenv('SQL_SERVER', 'localhost')
+    SQL_DATABASE = os.getenv('SQL_DATABASE', 'CameraShopDB')
+    SQL_USERNAME = os.getenv('SQL_USERNAME', 'fuongtuan')
+    SQL_PASSWORD = os.getenv('SQL_PASSWORD', 'toilabanhmochi')
+    SQL_DRIVER = os.getenv('SQL_DRIVER', 'ODBC Driver 17 for SQL Server')
+    
+    # Build connection string for SQL Server
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        f'sqlite:///{DB_PATH.as_posix()}'  # Use forward slashes for SQLAlchemy
+        f'mssql+pyodbc://{SQL_USERNAME}:{SQL_PASSWORD}@{SQL_SERVER}/{SQL_DATABASE}?driver={SQL_DRIVER.replace(" ", "+")}'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 3600,
+        'pool_size': 10,
+        'max_overflow': 20
+    }
+    
+    # Base directory for file paths
+    BASE_DIR = Path(__file__).parent.parent.parent.parent.resolve()
     
     # Upload settings
     UPLOAD_FOLDER = BASE_DIR / 'static' / 'uploads'

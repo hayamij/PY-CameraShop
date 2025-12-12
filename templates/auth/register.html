@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Camera Shop{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <h2>REGISTER</h2>
+        </div>
+        <div class="card-body">
+            <form id="registerForm">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="username">USERNAME</label>
+                        <input type="text" id="username" name="username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">EMAIL</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="password">PASSWORD</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirmPassword">CONFIRM PASSWORD</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="full_name">FULL NAME</label>
+                    <input type="text" id="full_name" name="full_name" class="form-control" required>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="phone_number">PHONE NUMBER (OPTIONAL)</label>
+                        <input type="tel" id="phone_number" name="phone_number" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="address">ADDRESS (OPTIONAL)</label>
+                        <input type="text" id="address" name="address" class="form-control">
+                    </div>
+                </div>
+                <div id="registerError" class="alert alert-error d-none"></div>
+                <button type="submit" class="btn btn-block">REGISTER</button>
+            </form>
+        </div>
+        <div class="card-footer text-center">
+            <p>ALREADY HAVE AN ACCOUNT? <a href="/login">LOGIN HERE</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorDiv = document.getElementById('registerError');
+    errorDiv.classList.add('d-none');
+    
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (password !== confirmPassword) {
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.classList.remove('d-none');
+        return;
+    }
+    
+    const formData = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: password,
+        full_name: document.getElementById('full_name').value,
+        phone_number: document.getElementById('phone_number').value || undefined,
+        address: document.getElementById('address').value || undefined
+    };
+    
+    try {
+        const response = await API.auth.register(formData);
+        if (response.success) {
+            alert('Registration successful! Please login.');
+            window.location.href = '/login';
+        } else {
+            errorDiv.textContent = response.error || 'Registration failed';
+            errorDiv.classList.remove('d-none');
+        }
+    } catch (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.classList.remove('d-none');
+    }
+});
+
+});
+</script>
+{% endblock %}

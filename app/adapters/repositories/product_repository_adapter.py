@@ -70,7 +70,7 @@ class ProductRepositoryAdapter(IProductRepository):
         if visible_only:
             query = query.filter_by(is_visible=True)
         
-        product_models = query.offset(skip).limit(limit).all()
+        product_models = query.order_by(ProductModel.product_id).offset(skip).limit(limit).all()
         return [self._to_domain_entity(model) for model in product_models]
     
     def find_by_category(self, category_id: int, skip: int = 0, limit: int = 100) -> List[Product]:
@@ -78,6 +78,7 @@ class ProductRepositoryAdapter(IProductRepository):
         product_models = (
             self._session.query(ProductModel)
             .filter_by(category_id=category_id, is_visible=True)
+            .order_by(ProductModel.product_id)
             .offset(skip)
             .limit(limit)
             .all()
@@ -89,6 +90,7 @@ class ProductRepositoryAdapter(IProductRepository):
         product_models = (
             self._session.query(ProductModel)
             .filter_by(brand_id=brand_id, is_visible=True)
+            .order_by(ProductModel.product_id)
             .offset(skip)
             .limit(limit)
             .all()

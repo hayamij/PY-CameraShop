@@ -26,6 +26,7 @@ class CancelOrderOutputData:
     """Output data after canceling an order"""
     success: bool
     order_id: int
+    order_status: str
     message: str
 
 
@@ -91,7 +92,7 @@ class CancelOrderUseCase:
         for order_item in order.items:
             product = self.product_repository.find_by_id(order_item.product_id)
             if product:
-                product.increase_stock(order_item.quantity)
+                product.add_stock(order_item.quantity)
                 self.product_repository.save(product)
         
         # Save cancelled order
@@ -100,5 +101,6 @@ class CancelOrderUseCase:
         return CancelOrderOutputData(
             success=True,
             order_id=order.id,
+            order_status=order.status.value,
             message=f"Order #{order.id} has been cancelled successfully"
         )

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-xl">
+    <h1>ADMIN DASHBOARD</h1>
+</div>
+
+<div class="grid grid-4 gap-lg mb-xl">
+    <div class="card">
+        <div class="card-body text-center p-lg">
+            <p class="text-secondary mb-sm">TOTAL USERS</p>
+            <p class="font-weight-bold" style="font-size: 2rem;" id="totalUsers">-</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center p-lg">
+            <p class="text-secondary mb-sm">TOTAL PRODUCTS</p>
+            <p class="font-weight-bold" style="font-size: 2rem;" id="totalProducts">-</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center p-lg">
+            <p class="text-secondary mb-sm">TOTAL ORDERS</p>
+            <p class="font-weight-bold" style="font-size: 2rem;" id="totalOrders">-</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center p-lg">
+            <p class="text-secondary mb-sm">PENDING ORDERS</p>
+            <p class="font-weight-bold" style="font-size: 2rem;" id="pendingOrders">-</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2 gap-lg">
+    <div class="card">
+        <div class="card-header">
+            <h3>RECENT ORDERS</h3>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ORDER ID</th>
+                        <th>USER</th>
+                        <th>TOTAL</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="recentOrders">
+                    <tr>
+                        <td colspan="4" class="text-center">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a href="/admin/orders" class="btn btn-outline">VIEW ALL ORDERS</a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>LOW STOCK PRODUCTS</h3>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>PRODUCT</th>
+                        <th>STOCK</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="lowStockProducts">
+                    <tr>
+                        <td colspan="3" class="text-center">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a href="/admin/products" class="btn btn-outline">VIEW ALL PRODUCTS</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+async function loadDashboard() {
+    try {
+        showLoading();
+        
+        const [usersRes, productsRes, ordersRes] = await Promise.all([
+            API.admin.users.list({ page: 1, per_page: 100 }),
+            API.products.list({ page: 1, per_page: 100 }),
+            API.admin.orders.list({ page: 1, per_page: 100 })
+        ]);
+        
+        hideLoading();
+        
+        if (usersRes.success && usersRes.data) {
+            document.getElementById('totalUsers').textContent = usersRes.data.pagination.total;
+        }
+        
+        if (productsRes.success) {
+            document.getElementById('totalProducts').textContent = productsRes.total_products;
+            displayLowStockProducts(productsRes.products);
+        }
+        
+        if (ordersRes.success) {
+            document.getElementById('totalOrders').textContent = ordersRes.total_orders;
+            const pending = ordersRes.orders.filter(o => o.status === 'CHO_XAC_NHAN').length;
+            document.getElementById('pendingOrders').textContent = pending;
+            displayRecentOrders(ordersRes.orders.slice(0, 5));
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function displayRecentOrders(orders) {
+    const tbody = document.getElementById('recentOrders');
+    
+    if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No orders found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = orders.map(order => `
+        <tr>
+            <td><a href="/orders/${order.order_id}">#${order.order_id}</a></td>
+            <td>${order.customer_email || order.customer_name || 'N/A'}</td>
+            <td>${formatCurrency(order.total_amount)}</td>
+            <td class="text-uppercase">${order.status}</td>
+        </tr>
+    `).join('');
+}
+
+function displayLowStockProducts(products) {
+    const lowStock = products.filter(p => p.stock_quantity < 10).slice(0, 5);
+    const tbody = document.getElementById('lowStockProducts');
+    
+    if (lowStock.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">No low stock products</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = lowStock.map(product => `
+        <tr>
+            <td>${product.name}</td>
+            <td class="font-weight-bold">${product.stock_quantity}</td>
+            <td><a href="/admin/products/${product.product_id}" class="btn btn-outline btn-sm">EDIT</a></td>
+        </tr>
+    `).join('');
+}
+
+loadDashboard();
+
+});
+</script>
+{% endblock %}

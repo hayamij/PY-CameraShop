@@ -2,7 +2,7 @@
 Infrastructure Layer - Product ORM Model
 This is NOT a domain entity - it's a database model for SQLAlchemy
 """
-from sqlalchemy import Column, Integer, String, Numeric, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, Boolean, DateTime, ForeignKey, JSON, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ...config.database import Base
@@ -22,7 +22,7 @@ class ProductModel(Base):
     
     # Product information
     name = Column(String(255), unique=True, nullable=False, index=True)
-    description = Column(String, nullable=True)  # TEXT in SQLite
+    description = Column(Text, nullable=True)  # NVARCHAR(MAX) in SQL Server
     price = Column(Numeric(18, 2), nullable=False, index=True)
     stock_quantity = Column(Integer, nullable=False, default=0)
     
@@ -58,8 +58,7 @@ class CategoryModel(Base):
     
     category_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), unique=True, nullable=False, index=True)
-    description = Column(String, nullable=True)
-    is_active = Column(Boolean, nullable=False, default=True)
+    description = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     
     # Relationships
@@ -78,8 +77,8 @@ class BrandModel(Base):
     
     brand_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), unique=True, nullable=False, index=True)
-    description = Column(String, nullable=True)
-    logo_url = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
+    logo_url = Column(String(500), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     

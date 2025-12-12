@@ -2,7 +2,7 @@
 Infrastructure Layer - User ORM Model
 This is NOT a domain entity - it's a database model for SQLAlchemy
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ...config.database import Base
@@ -28,7 +28,7 @@ class UserModel(Base):
     # User information
     full_name = Column(String(255), nullable=False)
     phone_number = Column(String(20), nullable=True)
-    address = Column(String, nullable=True)  # TEXT in SQLite
+    address = Column(Text, nullable=True)  # NVARCHAR(MAX) in SQL Server
     
     # Role and status
     role_id = Column(Integer, ForeignKey('roles.role_id'), nullable=False, default=2, index=True)

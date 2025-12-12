@@ -29,22 +29,27 @@ def init_database(app=None, db_url=None):
         if app:
             db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
         else:
-            # Default to absolute path
-            from pathlib import Path
-            base_dir = Path(__file__).parent.parent.parent.parent
-            db_path = base_dir / 'instance' / 'camerashop.db'
-            db_url = f'sqlite:///{db_path}'
+            # Use SQL Server by default
+            db_url = 'mssql+pyodbc://fuongtuan:toilabanhmochi@localhost/CameraShopDB?driver=ODBC+Driver+17+for+SQL+Server'
     
     # Debug: Print database URL
     print(f"🔧 Initializing database: {db_url}")
     
-    # Create engine
-    _engine = create_engine(
-        db_url,
-        echo=False,  # Set to True for SQL query logging
-        pool_pre_ping=True,  # Verify connections before using
-        connect_args={'check_same_thread': False} if 'sqlite' in db_url else {}
-    )
+    # Create engine with appropriate options
+    engine_options = {
+        'echo': False,  # Set to True for SQL query logging
+        'pool_pre_ping': True,  # Verify connections before using
+    }
+    
+    # Add SQL Server specific options
+    if 'mssql' in db_url or 'pyodbc' in db_url:
+        engine_options.update({
+            'pool_size': 10,
+            'max_overflow': 20,
+            'pool_recycle': 3600,
+        })
+    
+    _engine = create_engine(db_url, **engine_options)
     
     # Create session factory
     _session_factory = sessionmaker(bind=_engine)

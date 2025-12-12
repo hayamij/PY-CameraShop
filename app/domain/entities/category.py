@@ -33,7 +33,6 @@ class Category:
         self._id: Optional[int] = None
         self._name = name.strip()
         self._description = description.strip() if description else None
-        self._is_active = True
         self._created_at = datetime.now()
     
     @staticmethod
@@ -41,7 +40,6 @@ class Category:
         category_id: int,
         name: str,
         description: Optional[str],
-        is_active: bool,
         created_at: datetime
     ) -> 'Category':
         """Reconstruct category from database (no validation)"""
@@ -49,7 +47,6 @@ class Category:
         category._id = category_id
         category._name = name
         category._description = description
-        category._is_active = is_active
         category._created_at = created_at
         return category
     
@@ -67,10 +64,6 @@ class Category:
         return self._description
     
     @property
-    def is_active(self) -> bool:
-        return self._is_active
-    
-    @property
     def created_at(self) -> datetime:
         return self._created_at
     
@@ -84,18 +77,6 @@ class Category:
         
         if description is not None:
             self._description = description.strip() if description else None
-    
-    def deactivate(self):
-        """Deactivate category"""
-        if not self._is_active:
-            raise ValueError("Category is already inactive")
-        self._is_active = False
-    
-    def activate(self):
-        """Activate category"""
-        if self._is_active:
-            raise ValueError("Category is already active")
-        self._is_active = True
     
     def __eq__(self, other) -> bool:
         """Check equality based on ID"""

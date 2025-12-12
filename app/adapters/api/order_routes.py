@@ -14,6 +14,7 @@ from app.business.use_cases.cancel_order_use_case import (
     CancelOrderInputData
 )
 from app.adapters.api.auth_helpers import login_required
+from app.domain.exceptions import ValidationException, OrderNotFoundException
 
 
 def create_order_routes(
@@ -32,7 +33,7 @@ def create_order_routes(
         """Place a new order from cart"""
         try:
             user_id = session.get('user_id')
-            data = request.get_json()
+            data = request.get_json(silent=True)  # Use silent=True to avoid 415 errors
             
             # Validate required fields
             if not data or 'shipping_address' not in data or 'phone_number' not in data or 'payment_method' not in data:
@@ -129,15 +130,10 @@ def create_order_routes(
         try:
             user_id = session.get('user_id')
             
-            # Execute use case
-            output_data = get_order_detail_use_case.execute(order_id, user_id)
+            # Execute use case (only needs order_id)
+            output_data = get_order_detail_use_case.execute(order_id)
             
             if not output_data.success:
-                if 'not found' in output_data.message.lower():
-                    return jsonify({
-                        'success': False,
-                        'error': output_data.message
-                    }), 404
                 return jsonify({
                     'success': False,
                     'error': output_data.message
@@ -206,9 +202,15 @@ def create_order_routes(
             return jsonify({
                 'success': True,
                 'message': output_data.message,
-                'order_id': output_data.order_id
+                'order_id': output_data.order_id,
+                'order_status': output_data.order_status
             }), 200
             
+        except (ValidationException, OrderNotFoundException) as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 400
         except Exception as e:
             return jsonify({
                 'success': False,

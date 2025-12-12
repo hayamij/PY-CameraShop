@@ -74,3 +74,16 @@ class ICartRepository(ABC):
             True if cleared, False if cart not found
         """
         pass
+    
+    @abstractmethod
+    def remove_cart_item(self, cart_item_id: int) -> bool:
+        """
+        Remove a specific cart item
+        
+        Args:
+            cart_item_id: Cart item ID
+            
+        Returns:
+            True if removed, False if not found
+        """
+        pass

@@ -2,7 +2,7 @@
 Infrastructure Layer - Order ORM Model
 This is NOT a domain entity - it's a database model for SQLAlchemy
 """
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ...config.database import Base
@@ -29,9 +29,9 @@ class OrderModel(Base):
     payment_method = Column(String(50), nullable=False)
     
     # Shipping information
-    shipping_address = Column(String, nullable=False)  # TEXT in SQLite
+    shipping_address = Column(Text, nullable=False)  # NVARCHAR(MAX) in SQL Server
     phone_number = Column(String(20), nullable=False)
-    notes = Column(String, nullable=True)  # TEXT in SQLite
+    notes = Column(Text, nullable=True)  # NVARCHAR(MAX) in SQL Server
     
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.now, index=True)

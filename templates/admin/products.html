@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Products - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-lg d-flex justify-between align-center">
+    <h1>MANAGE PRODUCTS</h1>
+    <div class="d-flex gap-md">
+        <a href="/admin/dashboard" class="btn btn-outline">← BACK TO DASHBOARD</a>
+        <button class="btn btn-primary" onclick="showAddModal()">ADD PRODUCT</button>
+    </div>
+</div>
+
+<div class="card mb-lg">
+    <div class="card-body">
+        <div class="grid grid-4 gap-md">
+            <input type="text" 
+                   id="searchInput" 
+                   placeholder="Search products..."
+                   class="form-control">
+            <select id="categoryFilter" class="form-control">
+                <option value="">ALL CATEGORIES</option>
+            </select>
+            <select id="brandFilter" class="form-control">
+                <option value="">ALL BRANDS</option>
+            </select>
+            <select id="sortSelect" class="form-control">
+                <option value="newest">NEWEST FIRST</option>
+                <option value="oldest">OLDEST FIRST</option>
+                <option value="price_asc">PRICE: LOW TO HIGH</option>
+                <option value="price_desc">PRICE: HIGH TO LOW</option>
+                <option value="name_asc">NAME: A TO Z</option>
+                <option value="name_desc">NAME: Z TO A</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>NAME</th>
+                <th>CATEGORY</th>
+                <th>BRAND</th>
+                <th>PRICE</th>
+                <th>STOCK</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody id="productsTable">
+            <tr>
+                <td colspan="8" class="text-center">Loading...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="pagination" class="mt-lg text-center"></div>
+
+<!-- Product Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">ADD PRODUCT</h3>
+            <button class="btn-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                
+                <div class="form-group">
+                    <label>PRODUCT NAME</label>
+                    <input type="text" id="productName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>DESCRIPTION</label>
+                    <textarea id="productDescription" class="form-control" rows="3" required></textarea>
+                </div>
+                
+                <div class="grid grid-2 gap-md">
+                    <div class="form-group">
+                        <label>CATEGORY</label>
+                        <select id="productCategory" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>BRAND</label>
+                        <select id="productBrand" class="form-control" required></select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2 gap-md">
+                    <div class="form-group">
+                        <label>PRICE (USD)</label>
+                        <input type="number" id="productPrice" class="form-control" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>STOCK QUANTITY</label>
+                        <input type="number" id="productStock" class="form-control" min="0" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>IMAGE URL</label>
+                    <input type="url" id="productImage" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>SPECIFICATIONS (JSON)</label>
+                    <textarea id="productSpecs" class="form-control" rows="4" 
+                              placeholder='{"sensor": "Full Frame", "resolution": "24MP", ...}'></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal()">CANCEL</button>
+            <button class="btn btn-primary" onclick="saveProduct()">SAVE</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+let currentPage = 1;
+const pageSize = 20;
+let currentFilters = {
+    search: '',
+    category: null,
+    brand: null,
+    sort: 'newest'
+};
+
+async function loadProducts() {
+    try {
+        showLoading();
+        const response = await API.products.list(
+            currentPage, 
+            pageSize, 
+            currentFilters.search,
+            currentFilters.category,
+            currentFilters.brand,
+            currentFilters.sort
+        );
+        hideLoading();
+        
+        if (response.success) {
+            displayProducts(response.products);
+            displayPagination(response.total, response.page, response.page_size);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+async function loadFilters() {
+    try {
+        const [categoriesRes, brandsRes] = await Promise.all([
+            API.catalog.getCategories(),
+            API.catalog.getBrands()
+        ]);
+        
+        if (categoriesRes.success) {
+            const categorySelect = document.getElementById('categoryFilter');
+            const productCategory = document.getElementById('productCategory');
+            categoriesRes.categories.forEach(cat => {
+                categorySelect.innerHTML += `<option value="${cat.category_id}">${cat.name}</option>`;
+                productCategory.innerHTML += `<option value="${cat.category_id}">${cat.name}</option>`;
+            });
+        }
+        
+        if (brandsRes.success) {
+            const brandSelect = document.getElementById('brandFilter');
+            const productBrand = document.getElementById('productBrand');
+            brandsRes.brands.forEach(brand => {
+                brandSelect.innerHTML += `<option value="${brand.brand_id}">${brand.name}</option>`;
+                productBrand.innerHTML += `<option value="${brand.brand_id}">${brand.name}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading filters:', error);
+    }
+}
+
+function displayProducts(products) {
+    const tbody = document.getElementById('productsTable');
+    
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No products found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = products.map(product => `
+        <tr>
+            <td>${product.product_id}</td>
+            <td>${product.name}</td>
+            <td>${product.category_name}</td>
+            <td>${product.brand_name}</td>
+            <td>${formatCurrency(product.price, 'USD')}</td>
+            <td class="font-weight-bold ${product.stock_quantity < 10 ? 'text-danger' : ''}">
+                ${product.stock_quantity}
+            </td>
+            <td class="text-uppercase">${product.is_active ? 'ACTIVE' : 'INACTIVE'}</td>
+            <td>
+                <div class="d-flex gap-sm">
+                    <button class="btn btn-outline btn-sm" onclick="editProduct(${product.product_id})">
+                        EDIT
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="deleteProduct(${product.product_id})">
+                        DELETE
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function displayPagination(total, page, pageSize) {
+    const totalPages = Math.ceil(total / pageSize);
+    const container = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '<div class="d-flex justify-center gap-sm">';
+    
+    if (page > 1) {
+        html += `<button class="btn btn-outline" onclick="changePage(${page - 1})">PREVIOUS</button>`;
+    }
+    
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        html += `<button class="btn ${i === page ? 'btn-primary' : 'btn-outline'}" 
+                         onclick="changePage(${i})">${i}</button>`;
+    }
+    
+    if (page < totalPages) {
+        html += `<button class="btn btn-outline" onclick="changePage(${page + 1})">NEXT</button>`;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function showAddModal() {
+    document.getElementById('modalTitle').textContent = 'ADD PRODUCT';
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value = '';
+    document.getElementById('productModal').classList.add('show');
+}
+
+async function editProduct(productId) {
+    try {
+        showLoading();
+        const response = await API.products.getDetail(productId);
+        hideLoading();
+        
+        if (response.success) {
+            const product = response.product;
+            document.getElementById('modalTitle').textContent = 'EDIT PRODUCT';
+            document.getElementById('productId').value = product.product_id;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productDescription').value = product.description;
+            document.getElementById('productCategory').value = product.category_id;
+            document.getElementById('productBrand').value = product.brand_id;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productStock').value = product.stock_quantity;
+            document.getElementById('productImage').value = product.image_url || '';
+            document.getElementById('productSpecs').value = JSON.stringify(product.specifications || {}, null, 2);
+            document.getElementById('productModal').classList.add('show');
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+async function saveProduct() {
+    const productId = document.getElementById('productId').value;
+    const data = {
+        name: document.getElementById('productName').value,
+        description: document.getElementById('productDescription').value,
+        category_id: parseInt(document.getElementById('productCategory').value),
+        brand_id: parseInt(document.getElementById('productBrand').value),
+        price: parseFloat(document.getElementById('productPrice').value),
+        stock_quantity: parseInt(document.getElementById('productStock').value),
+        image_url: document.getElementById('productImage').value || null,
+        specifications: null
+    };
+    
+    try {
+        showLoading();
+        let response;
+        if (productId) {
+            response = await API.admin.products.update(parseInt(productId), data);
+        } else {
+            response = await API.admin.products.create(data);
+        }
+        hideLoading();
+        
+        if (response.success) {
+            showAlert(productId ? 'Product updated' : 'Product created', 'success');
+            closeModal();
+            loadProducts();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!confirm('Delete this product?')) return;
+    
+    try {
+        showLoading();
+        const response = await API.admin.products.delete(productId);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Product deleted', 'success');
+            loadProducts();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function closeModal() {
+    document.getElementById('productModal').classList.remove('show');
+}
+
+function changePage(page) {
+    currentPage = page;
+    loadProducts();
+}
+
+document.getElementById('searchInput').addEventListener('input', debounce((e) => {
+    currentFilters.search = e.target.value;
+    currentPage = 1;
+    loadProducts();
+}, 500));
+
+document.getElementById('categoryFilter').addEventListener('change', (e) => {
+    currentFilters.category = e.target.value ? parseInt(e.target.value) : null;
+    currentPage = 1;
+    loadProducts();
+});
+
+document.getElementById('brandFilter').addEventListener('change', (e) => {
+    currentFilters.brand = e.target.value ? parseInt(e.target.value) : null;
+    currentPage = 1;
+    loadProducts();
+});
+
+document.getElementById('sortSelect').addEventListener('change', (e) => {
+    currentFilters.sort = e.target.value;
+    currentPage = 1;
+    loadProducts();
+});
+
+window.showAddModal = showAddModal;
+window.editProduct = editProduct;
+window.saveProduct = saveProduct;
+window.deleteProduct = deleteProduct;
+window.closeModal = closeModal;
+window.changePage = changePage;
+
+loadFilters();
+loadProducts();
+
+});
+</script>
+{% endblock %}

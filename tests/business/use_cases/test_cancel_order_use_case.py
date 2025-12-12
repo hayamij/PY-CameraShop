@@ -96,10 +96,10 @@ class TestCancelOrderUseCase:
         product.product_id = product_id
         product.stock_quantity = stock_quantity
         
-        def increase_stock(quantity):
+        def add_stock(quantity):
             product.stock_quantity += quantity
         
-        product.increase_stock = increase_stock
+        product.add_stock = add_stock
         
         return product
     

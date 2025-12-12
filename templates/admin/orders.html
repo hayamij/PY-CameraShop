@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Orders - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-lg d-flex justify-between align-center">
+    <h1>MANAGE ORDERS</h1>
+    <a href="/admin/dashboard" class="btn btn-outline">← BACK TO DASHBOARD</a>
+</div>
+
+<div class="card mb-lg">
+    <div class="card-body">
+        <div class="grid grid-2 gap-md">
+            <input type="text" 
+                   id="searchInput" 
+                   placeholder="Search by order ID or user email..."
+                   class="form-control">
+            <select id="statusFilter" class="form-control" onchange="filterOrders(this.value)">
+                <option value="">ALL STATUSES</option>
+                <option value="CHO_XAC_NHAN">PENDING</option>
+                <option value="DANG_GIAO">SHIPPING</option>
+                <option value="HOAN_THANH">COMPLETED</option>
+                <option value="DA_HUY">CANCELLED</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ORDER ID</th>
+                <th>USER</th>
+                <th>ITEMS</th>
+                <th>TOTAL</th>
+                <th>PAYMENT</th>
+                <th>STATUS</th>
+                <th>ORDER DATE</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody id="ordersTable">
+            <tr>
+                <td colspan="8" class="text-center">Loading...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="pagination" class="mt-lg text-center"></div>
+
+<!-- Order Detail Modal -->
+<div id="orderModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">ORDER DETAIL</h3>
+            <button class="btn-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="orderDetail">
+            <!-- Order detail will be loaded here -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal()">CLOSE</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+let currentPage = 1;
+const pageSize = 20;
+let currentStatus = '';
+
+async function loadOrders() {
+    try {
+        showLoading();
+        const params = { page: currentPage, per_page: pageSize };
+        if (currentStatus) params.status = currentStatus;
+        
+        const response = await API.admin.orders.list(params);
+        hideLoading();
+        
+        if (response.success) {
+            displayOrders(response.orders);
+            displayPagination(response.total_orders, currentPage, pageSize);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function displayOrders(orders) {
+    const tbody = document.getElementById('ordersTable');
+    
+    if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No orders found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = orders.map(order => `
+        <tr>
+            <td class="font-weight-bold">#${order.order_id}</td>
+            <td>${order.customer_email || order.customer_name || 'N/A'}</td>
+            <td>${order.item_count || 0} items</td>
+            <td class="font-weight-bold">${formatCurrency(order.total_amount)}</td>
+            <td>${order.payment_method.replace('_', ' ')}</td>
+            <td class="text-uppercase font-weight-bold">${order.status}</td>
+            <td>${formatDate(order.order_date)}</td>
+            <td>
+                <div class="d-flex gap-sm">
+                    <button class="btn btn-outline btn-sm" onclick="viewOrderDetail(${order.order_id})">
+                        VIEW
+                    </button>
+                    ${order.status === 'CHO_XAC_NHAN' ? `
+                        <button class="btn btn-outline btn-sm" onclick="updateOrderStatus(${order.order_id}, 'DANG_GIAO')">
+                            SHIP
+                        </button>
+                    ` : ''}
+                    ${order.status === 'DANG_GIAO' ? `
+                        <button class="btn btn-outline btn-sm" onclick="updateOrderStatus(${order.order_id}, 'HOAN_THANH')">
+                            COMPLETE
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterOrders(status) {
+    currentStatus = status;
+    currentPage = 1;
+    loadOrders();
+}
+
+function changePage(page) {
+    currentPage = page;
+    loadOrders();
+}
+
+function displayPagination(total, page, pageSize) {
+    const totalPages = Math.ceil(total / pageSize);
+    const container = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '<div class="d-flex justify-center gap-sm">';
+    
+    if (page > 1) {
+        html += `<button class="btn btn-outline" onclick="changePage(${page - 1})">PREVIOUS</button>`;
+    }
+    
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        html += `<button class="btn ${i === page ? 'btn-primary' : 'btn-outline'}" 
+                         onclick="changePage(${i})">${i}</button>`;
+    }
+    
+    if (page < totalPages) {
+        html += `<button class="btn btn-outline" onclick="changePage(${page + 1})">NEXT</button>`;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+async function viewOrderDetail(orderId) {
+    try {
+        showLoading();
+        const response = await API.orders.getDetail(orderId);
+        hideLoading();
+        
+        if (response.success) {
+            const order = response.order;
+            document.getElementById('orderDetail').innerHTML = `
+                <div class="mb-lg">
+                    <div class="grid grid-3 gap-lg">
+                        <div>
+                            <p class="font-weight-bold text-uppercase mb-sm">ORDER DATE</p>
+                            <p>${formatDate(order.order_date)}</p>
+                        </div>
+                        <div>
+                            <p class="font-weight-bold text-uppercase mb-sm">STATUS</p>
+                            <p class="text-uppercase">${order.status}</p>
+                        </div>
+                        <div>
+                            <p class="font-weight-bold text-uppercase mb-sm">PAYMENT METHOD</p>
+                            <p>${order.payment_method.replace('_', ' ')}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-lg border-top pt-lg">
+                    <div class="grid grid-2 gap-lg">
+                        <div>
+                            <p class="font-weight-bold text-uppercase mb-sm">CUSTOMER</p>
+                            <p>${order.customer_email}</p>
+                        </div>
+                        <div>
+                            <p class="font-weight-bold text-uppercase mb-sm">PHONE</p>
+                            <p>${order.customer_phone}</p>
+                        </div>
+                        <div>
+                            <p class="font-weight-bold text-uppercase mb-sm">SHIPPING ADDRESS</p>
+                            <p>${order.shipping_address}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-top pt-lg">
+                    <p class="font-weight-bold text-uppercase mb-md">ORDER ITEMS</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>PRODUCT</th>
+                                <th>QUANTITY</th>
+                                <th>UNIT PRICE</th>
+                                <th>SUBTOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${order.items.map(item => `
+                                <tr>
+                                    <td>${item.product_name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${formatCurrency(item.unit_price, 'USD')}</td>
+                                    <td class="font-weight-bold">${formatCurrency(item.subtotal, 'USD')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr class="border-top">
+                                <td colspan="3" class="text-right font-weight-bold">SUBTOTAL:</td>
+                                <td class="font-weight-bold">${formatCurrency(order.subtotal, 'USD')}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-bold">TAX:</td>
+                                <td class="font-weight-bold">${formatCurrency(order.tax, 'USD')}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-bold">SHIPPING:</td>
+                                <td class="font-weight-bold">${formatCurrency(order.shipping_fee, 'USD')}</td>
+                            </tr>
+                            <tr class="border-top">
+                                <td colspan="3" class="text-right font-weight-bold" style="font-size: var(--font-size-lg);">TOTAL:</td>
+                                <td class="font-weight-bold" style="font-size: var(--font-size-lg);">${formatCurrency(order.total_amount, 'USD')}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            document.getElementById('orderModal').classList.add('show');
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+async function updateOrderStatus(orderId, status) {
+    try {
+        showLoading();
+        const response = await API.admin.orders.updateStatus(orderId, status);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Order status updated', 'success');
+            loadOrders();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function closeModal() {
+    document.getElementById('orderModal').classList.remove('show');
+}
+
+window.filterOrders = filterOrders;
+window.changePage = changePage;
+window.viewOrderDetail = viewOrderDetail;
+window.updateOrderStatus = updateOrderStatus;
+window.closeModal = closeModal;
+
+loadOrders();
+
+});
+</script>
+{% endblock %}

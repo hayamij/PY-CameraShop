@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Product Detail - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-lg">
+    <a href="/products" class="btn btn-outline">← BACK TO PRODUCTS</a>
+</div>
+
+<div id="productDetail">
+    <!-- Product detail will be loaded here -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+const productId = window.location.pathname.split('/').pop();
+
+async function loadProductDetail() {
+    try {
+        showLoading();
+        const response = await API.products.getDetail(productId);
+        
+        if (response.success) {
+            displayProduct(response.product);
+        } else {
+            showAlert(response.error, 'error');
+        }
+        hideLoading();
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function displayProduct(product) {
+    const container = document.getElementById('productDetail');
+    
+    container.innerHTML = `
+        <div class="grid grid-2 gap-xl">
+            <div>
+                <img src="${product.image_url || '/static/images/placeholder.jpg'}" 
+                     alt="${product.name}" 
+                     style="width: 100%; border: 2px solid var(--color-border);">
+            </div>
+            <div>
+                <h1 class="mb-md">${product.name}</h1>
+                <p class="text-uppercase text-secondary mb-sm">
+                    ${product.category_name} | ${product.brand_name}
+                </p>
+                <h2 class="mb-lg" style="font-family: var(--font-family-mono);">
+                    ${formatCurrency(product.price, product.currency)}
+                </h2>
+                <div class="mb-lg">
+                    <p class="font-weight-bold text-uppercase mb-xs">AVAILABILITY</p>
+                    <p class="${product.is_available ? 'text-success' : 'text-error'}">
+                        ${product.is_available ? `IN STOCK (${product.stock_quantity} UNITS)` : 'OUT OF STOCK'}
+                    </p>
+                </div>
+                <div class="mb-xl">
+                    <p class="font-weight-bold text-uppercase mb-xs">DESCRIPTION</p>
+                    <p style="line-height: var(--line-height-relaxed);">${product.description}</p>
+                </div>
+                ${product.is_available ? `
+                    <div class="form-group">
+                        <label class="form-label" for="quantity">QUANTITY</label>
+                        <input type="number" id="quantity" class="form-control" value="1" min="1" max="${product.stock_quantity}">
+                    </div>
+                    <button class="btn btn-block" onclick="addToCart()">ADD TO CART</button>
+                ` : `
+                    <button class="btn btn-block" disabled>OUT OF STOCK</button>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+async function addToCart() {
+    const quantity = parseInt(document.getElementById('quantity').value);
+    
+    if (quantity < 1) {
+        showAlert('Invalid quantity', 'error');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await API.cart.add(parseInt(productId), quantity);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Product added to cart successfully', 'success');
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        if (error.message.includes('401') || error.message.includes('authenticated')) {
+            showAlert('Please login to add products to cart', 'error');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            showAlert(error.message, 'error');
+        }
+    }
+}
+
+window.addToCart = addToCart;
+
+loadProductDetail();
+
+});
+</script>
+{% endblock %}

@@ -116,7 +116,7 @@ class GetOrderDetailUseCase:
             customer = self.user_repository.find_by_id(order.customer_id)
             customer_name = customer.full_name if customer else "Unknown"
             customer_email = customer.email.address if customer and customer.email else ""
-            customer_phone = customer.phone_number if customer else ""
+            customer_phone = str(customer.phone_number) if customer and customer.phone_number else ""
             
             # Build order items with product details
             order_items = []
@@ -158,10 +158,10 @@ class GetOrderDetailUseCase:
                 shipping_address=order.shipping_address,
                 payment_method=order.payment_method.value,
                 items=order_items,
-                subtotal=subtotal,
-                tax=tax,
-                shipping_fee=shipping_fee,
-                total_amount=total
+                subtotal=float(subtotal),
+                tax=float(tax),
+                shipping_fee=float(shipping_fee),
+                total_amount=float(total)
             )
             
         except OrderNotFoundException as e:

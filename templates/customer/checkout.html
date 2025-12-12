@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-xl">
+    <h1>CHECKOUT</h1>
+</div>
+
+<form id="checkoutForm" class="grid grid-3 gap-xl">
+    <div style="grid-column: span 2;">
+        <div class="card mb-lg">
+            <div class="card-header">SHIPPING INFORMATION</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="shipping_address">SHIPPING ADDRESS</label>
+                    <textarea id="shipping_address" name="shipping_address" class="form-control" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="phone_number">PHONE NUMBER</label>
+                    <input type="tel" id="phone_number" name="phone_number" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="notes">ORDER NOTES (OPTIONAL)</label>
+                    <textarea id="notes" name="notes" class="form-control"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">PAYMENT METHOD</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <select id="payment_method" name="payment_method" class="form-control" required>
+                        <option value="">SELECT PAYMENT METHOD</option>
+                        <option value="CREDIT_CARD">CREDIT CARD</option>
+                        <option value="BANK_TRANSFER">BANK TRANSFER</option>
+                        <option value="COD">CASH ON DELIVERY</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div>
+        <div class="card">
+            <div class="card-header">ORDER SUMMARY</div>
+            <div class="card-body">
+                <div id="orderSummary">
+                    <!-- Summary will be loaded here -->
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-block">PLACE ORDER</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div id="checkoutError" class="alert alert-error d-none mt-lg"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+async function loadCartSummary() {
+    try {
+        const response = await API.cart.view();
+        if (response.success && response.cart.items && response.cart.items.length > 0) {
+            const cart = response.cart;
+            document.getElementById('orderSummary').innerHTML = `
+                <div class="mb-md">
+                    <p class="font-weight-bold mb-sm">${cart.total_items} ITEM${cart.total_items > 1 ? 'S' : ''}</p>
+                    ${cart.items.map(item => `
+                        <p class="text-secondary">${item.quantity}x ${item.product_name}</p>
+                    `).join('')}
+                </div>
+                <div class="border-top pt-md">
+                    <div class="d-flex justify-between mb-sm">
+                        <span>SUBTOTAL:</span>
+                        <span>${formatCurrency(cart.subtotal, 'USD')}</span>
+                    </div>
+                    <div class="d-flex justify-between mb-sm">
+                        <span>TAX:</span>
+                        <span>${formatCurrency(cart.tax, 'USD')}</span>
+                    </div>
+                    <div class="d-flex justify-between mb-md">
+                        <span>SHIPPING:</span>
+                        <span>${formatCurrency(cart.shipping, 'USD')}</span>
+                    </div>
+                    <div class="d-flex justify-between font-weight-bold" style="font-size: var(--font-size-lg);">
+                        <span>TOTAL:</span>
+                        <span>${formatCurrency(cart.total, 'USD')}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            window.location.href = '/cart';
+        }
+    } catch (error) {
+        showAlert(error.message, 'error');
+        setTimeout(() => window.location.href = '/cart', 2000);
+    }
+}
+
+document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorDiv = document.getElementById('checkoutError');
+    errorDiv.classList.add('d-none');
+    
+    const formData = {
+        shipping_address: document.getElementById('shipping_address').value,
+        phone_number: document.getElementById('phone_number').value,
+        payment_method: document.getElementById('payment_method').value,
+        notes: document.getElementById('notes').value || undefined
+    };
+    
+    try {
+        showLoading();
+        const response = await API.orders.place(formData);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Order placed successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '/orders';
+            }, 2000);
+        } else {
+            errorDiv.textContent = response.error || 'Failed to place order';
+            errorDiv.classList.remove('d-none');
+        }
+    } catch (error) {
+        hideLoading();
+        errorDiv.textContent = error.message;
+        errorDiv.classList.remove('d-none');
+    }
+});
+
+loadCartSummary();
+
+});
+</script>
+{% endblock %}

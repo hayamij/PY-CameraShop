@@ -79,6 +79,24 @@ class IOrderRepository(ABC):
         pass
     
     @abstractmethod
+    def find_by_user_and_status(
+        self,
+        customer_id: int,
+        status: str
+    ) -> List[Order]:
+        """
+        Find orders by customer and status
+        
+        Args:
+            customer_id: Customer ID
+            status: Order status string
+            
+        Returns:
+            List of order entities matching criteria
+        """
+        pass
+    
+    @abstractmethod
     def find_all(self, skip: int = 0, limit: int = 100) -> List[Order]:
         """
         Find all orders with pagination

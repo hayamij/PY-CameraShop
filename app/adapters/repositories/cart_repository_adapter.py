@@ -361,6 +361,34 @@ class CartRepositoryAdapter(ICartRepository):
         finally:
             session.close()
     
+    def remove_cart_item(self, cart_item_id: int) -> bool:
+        """
+        Remove a specific cart item.
+        
+        Args:
+            cart_item_id: Cart item ID
+            
+        Returns:
+            True if removed, False if not found
+        """
+        session = self._session or get_session()
+        try:
+            cart_item = session.query(CartItemModel).filter(
+                CartItemModel.cart_item_id == cart_item_id
+            ).first()
+            
+            if not cart_item:
+                return False
+            
+            session.delete(cart_item)
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+    
     def _to_domain_entity(self, cart_model: CartModel) -> Cart:
         """
         Convert ORM model to domain entity.

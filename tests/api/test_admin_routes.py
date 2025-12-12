@@ -338,12 +338,12 @@ class TestAdminProductManagement:
         """TC4: Admin can update product"""
         response = client.put(f'/api/admin/products/{sample_product.product_id}', json={
             'name': 'Updated Product Name',
+            'description': 'Updated description with at least 10 characters',
             'price': 1500.00,
-            'description': 'Updated description with at least 10 characters'
+            'stock_quantity': 15,
+            'category_id': sample_product.category_id,
+            'brand_id': sample_product.brand_id
         })
-        if response.status_code != 200:
-            import sys
-            print(f"ERROR: {response.get_json()}", file=sys.stderr)
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] is True
@@ -611,16 +611,24 @@ class TestAdminAuthorizationAndEdgeCases:
     
     def test_admin_access_with_no_session(self, client):
         """TC1: All admin endpoints require authentication"""
-        endpoints = [
+        # Test GET endpoints that exist
+        get_endpoints = [
             '/api/admin/users',
-            '/api/admin/products',
-            '/api/admin/categories',
-            '/api/admin/brands',
             '/api/admin/orders'
         ]
-        for endpoint in endpoints:
+        for endpoint in get_endpoints:
             response = client.get(endpoint)
-            assert response.status_code == 401
+            assert response.status_code == 401, f"Expected 401 for GET {endpoint}, got {response.status_code}"
+        
+        # Test POST endpoints (should also require auth)
+        post_endpoints = [
+            ('/api/admin/products', {'name': 'Test'}),
+            ('/api/admin/categories', {'name': 'Test'}),
+            ('/api/admin/brands', {'name': 'Test'})
+        ]
+        for endpoint, data in post_endpoints:
+            response = client.post(endpoint, json=data)
+            assert response.status_code == 401, f"Expected 401 for POST {endpoint}, got {response.status_code}"
     
     def test_admin_endpoints_reject_non_admin(self, client, logged_in_regular_user):
         """TC2: All admin endpoints reject non-admin users"""

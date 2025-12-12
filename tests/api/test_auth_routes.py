@@ -494,7 +494,7 @@ class TestGetCurrentUserEndpoint:
 class TestAuthenticationFlow:
     """Test complete authentication flow"""
     
-    def test_complete_auth_flow(self, client, sample_user_data):
+    def test_complete_auth_flow(self, client, clean_db, sample_user_data):
         """TC1: Complete flow - Register → Login → Get user → Logout"""
         # Step 1: Register
         response = client.post(

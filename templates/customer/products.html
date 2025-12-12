@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-xl">
+    <h1 class="text-center">PRODUCTS</h1>
+</div>
+
+<!-- Filters -->
+<div class="card mb-xl">
+    <div class="card-body">
+        <div class="grid grid-4">
+            <div class="form-group">
+                <label class="form-label" for="searchQuery">SEARCH</label>
+                <input type="text" id="searchQuery" class="form-control" placeholder="Search products...">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="categoryFilter">CATEGORY</label>
+                <select id="categoryFilter" class="form-control">
+                    <option value="">ALL CATEGORIES</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="brandFilter">BRAND</label>
+                <select id="brandFilter" class="form-control">
+                    <option value="">ALL BRANDS</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="sortBy">SORT BY</label>
+                <select id="sortBy" class="form-control">
+                    <option value="newest">NEWEST</option>
+                    <option value="price_asc">PRICE: LOW TO HIGH</option>
+                    <option value="price_desc">PRICE: HIGH TO LOW</option>
+                    <option value="name_asc">NAME: A TO Z</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Grid -->
+<div id="productsGrid" class="grid grid-4 mb-xl">
+    <!-- Products will be loaded here -->
+</div>
+
+<!-- Pagination -->
+<div id="pagination" class="pagination">
+    <!-- Pagination will be loaded here -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+let currentPage = 1;
+let currentFilters = {};
+
+async function loadCategories() {
+    try {
+        const response = await API.catalog.getCategories();
+        const select = document.getElementById('categoryFilter');
+        response.categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.category_id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load categories:', error);
+    }
+}
+
+async function loadBrands() {
+    try {
+        const response = await API.catalog.getBrands();
+        const select = document.getElementById('brandFilter');
+        response.brands.forEach(brand => {
+            const option = document.createElement('option');
+            option.value = brand.brand_id;
+            option.textContent = brand.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load brands:', error);
+    }
+}
+
+async function loadProducts(page = 1) {
+    try {
+        showLoading();
+        currentPage = page;
+        
+        const params = {
+            page: page,
+            per_page: 12,
+            ...currentFilters
+        };
+        
+        const response = await API.products.list(params);
+        displayProducts(response.products);
+        displayPagination(response);
+        hideLoading();
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+function displayProducts(products) {
+    const grid = document.getElementById('productsGrid');
+    
+    if (products.length === 0) {
+        grid.innerHTML = '<div class="col-span-4 text-center p-xl"><h3>NO PRODUCTS FOUND</h3></div>';
+        return;
+    }
+    
+    grid.innerHTML = products.map(product => `
+        <div class="product-card">
+            <img src="${product.image_url || '/static/images/placeholder.jpg'}" 
+                 alt="${product.name}" 
+                 class="product-image">
+            <div class="product-info">
+                <h3 class="product-name">${product.name}</h3>
+                <p class="product-price">${formatCurrency(product.price, product.currency)}</p>
+                <p class="product-stock">${product.is_available ? 'IN STOCK' : 'OUT OF STOCK'}</p>
+                <div class="mt-md">
+                    <a href="/products/${product.product_id}" class="btn btn-block">VIEW DETAILS</a>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayPagination(data) {
+    const pagination = document.getElementById('pagination');
+    const pages = [];
+    
+    // Previous button
+    pages.push(`
+        <button class="pagination-item ${!data.has_prev ? 'disabled' : ''}" 
+                onclick="loadProducts(${currentPage - 1})" 
+                ${!data.has_prev ? 'disabled' : ''}>
+            PREV
+        </button>
+    `);
+    
+    // Page numbers
+    for (let i = 1; i <= data.total_pages; i++) {
+        if (i === 1 || i === data.total_pages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            pages.push(`
+                <button class="pagination-item ${i === currentPage ? 'active' : ''}" 
+                        onclick="loadProducts(${i})">
+                    ${i}
+                </button>
+            `);
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            pages.push('<span class="pagination-item disabled">...</span>');
+        }
+    }
+    
+    // Next button
+    pages.push(`
+        <button class="pagination-item ${!data.has_next ? 'disabled' : ''}" 
+                onclick="loadProducts(${currentPage + 1})" 
+                ${!data.has_next ? 'disabled' : ''}>
+            NEXT
+        </button>
+    `);
+    
+    pagination.innerHTML = pages.join('');
+}
+
+// Filter handlers
+document.getElementById('searchQuery').addEventListener('input', debounce((e) => {
+    if (e.target.value.trim()) {
+        currentFilters.search_query = e.target.value.trim();
+    } else {
+        delete currentFilters.search_query;
+    }
+    loadProducts(1);
+}, 500));
+
+document.getElementById('categoryFilter').addEventListener('change', (e) => {
+    if (e.target.value) {
+        currentFilters.category_id = e.target.value;
+    } else {
+        delete currentFilters.category_id;
+    }
+    loadProducts(1);
+});
+
+document.getElementById('brandFilter').addEventListener('change', (e) => {
+    if (e.target.value) {
+        currentFilters.brand_id = e.target.value;
+    } else {
+        delete currentFilters.brand_id;
+    }
+    loadProducts(1);
+});
+
+document.getElementById('sortBy').addEventListener('change', (e) => {
+    currentFilters.sort_by = e.target.value;
+    loadProducts(1);
+});
+
+// Initialize
+loadCategories();
+loadBrands();
+loadProducts();
+
+window.loadProducts = loadProducts;
+
+});
+</script>
+{% endblock %}

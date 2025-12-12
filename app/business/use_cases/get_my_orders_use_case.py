@@ -90,7 +90,7 @@ class GetMyOrdersUseCase:
                 status=order.status.value,
                 payment_method=order.payment_method.value,
                 shipping_address=order.shipping_address,
-                phone_number=order.phone_number,
+                phone_number=str(order.phone_number) if order.phone_number else "",
                 notes=order.notes,
                 created_at=order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 item_count=len(order.items)

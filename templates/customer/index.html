@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Camera Shop{% endblock %}
+
+{% block content %}
+<div class="mb-xl">
+    <div class="card">
+        <div class="card-body text-center p-xl">
+            <h1 class="mb-lg">CAMERA SHOP</h1>
+            <p class="mb-xl" style="font-size: var(--font-size-lg);">
+                PROFESSIONAL PHOTOGRAPHY EQUIPMENT
+            </p>
+            <a href="/products" class="btn btn-primary">BROWSE PRODUCTS</a>
+        </div>
+    </div>
+</div>
+
+<div class="mb-xl">
+    <h2 class="mb-lg">FEATURED PRODUCTS</h2>
+    <div id="featuredProducts" class="grid grid-4 gap-lg">
+        <!-- Featured products will be loaded here -->
+    </div>
+</div>
+
+<div class="grid grid-3 gap-lg mb-xl">
+    <div class="card">
+        <div class="card-body text-center p-lg">
+            <h3 class="mb-md">QUALITY</h3>
+            <p>Professional grade camera equipment from leading brands</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center p-lg">
+            <h3 class="mb-md">SELECTION</h3>
+            <p>Wide range of cameras, lenses, and accessories</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center p-lg">
+            <h3 class="mb-md">SERVICE</h3>
+            <p>Expert support and fast shipping on all orders</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+async function loadFeaturedProducts() {
+    try {
+        const response = await API.products.list({ page: 1, per_page: 8, sort_by: 'newest' });
+        
+        if (response.success) {
+            displayFeaturedProducts(response.products);
+        }
+    } catch (error) {
+        console.error('Error loading featured products:', error);
+    }
+}
+
+function displayFeaturedProducts(products) {
+    const container = document.getElementById('featuredProducts');
+    
+    container.innerHTML = products.map(product => `
+        <div class="card">
+            <img src="${product.image_url || '/static/images/placeholder.jpg'}" 
+                 alt="${product.name}"
+                 class="card-img"
+                 style="width: 100%; height: 200px; object-fit: cover;">
+            <div class="card-body">
+                <h4 class="mb-sm">${product.name}</h4>
+                <p class="text-secondary mb-md">${product.brand_name}</p>
+                <p class="font-weight-bold mb-md" style="font-size: var(--font-size-lg);">
+                    ${formatCurrency(product.price, 'USD')}
+                </p>
+                <a href="/products/${product.product_id}" class="btn btn-outline btn-block">
+                    VIEW DETAILS
+                </a>
+            </div>
+        </div>
+    `).join('');
+}
+
+loadFeaturedProducts();
+
+});
+</script>
+{% endblock %}

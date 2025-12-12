@@ -8,50 +8,34 @@ view_bp = Blueprint('views', __name__)
 
 @view_bp.route('/')
 def index():
-    """Home page - redirect to products if logged in"""
-    if session.get('user_id'):
-        # Already logged in, redirect based on role
-        if session.get('role') == 'ADMIN':
-            return redirect(url_for('views.admin_dashboard'))
-        return redirect(url_for('views.products'))
-    return render_template('index.html')
+    """Home page"""
+    return render_template('customer/index.html')
 
 
 @view_bp.route('/products')
 def products():
     """Product listing page"""
-    page = request.args.get('page', 1, type=int)
-    category_id = request.args.get('category_id', type=int)
-    brand_id = request.args.get('brand_id', type=int)
-    search = request.args.get('search', '')
-    
-    return render_template(
-        'products/list.html',
-        page=page,
-        category_id=category_id,
-        brand_id=brand_id,
-        search=search
-    )
+    return render_template('customer/products.html')
 
 
 @view_bp.route('/products/<int:product_id>')
 def product_detail(product_id):
     """Product detail page"""
-    return render_template('products/detail.html', product_id=product_id)
+    return render_template('customer/product-detail.html', product_id=product_id)
 
 
 @view_bp.route('/cart')
 @login_required
 def cart():
     """Shopping cart page"""
-    return render_template('cart/view.html')
+    return render_template('customer/cart.html')
 
 
 @view_bp.route('/checkout')
 @login_required
 def checkout():
     """Checkout page"""
-    return render_template('cart/checkout.html')
+    return render_template('customer/checkout.html')
 
 
 @view_bp.route('/login')
@@ -74,14 +58,14 @@ def register():
 @login_required
 def my_orders():
     """My orders page"""
-    return render_template('orders/my_orders.html')
+    return render_template('customer/orders.html')
 
 
 @view_bp.route('/orders/<int:order_id>')
 @login_required
 def order_detail(order_id):
     """Order detail page"""
-    return render_template('orders/detail.html', order_id=order_id)
+    return render_template('customer/order-detail.html', order_id=order_id)
 
 
 @view_bp.route('/admin')
@@ -93,7 +77,18 @@ def admin_dashboard():
         flash('Bạn không có quyền truy cập trang này', 'error')
         return redirect(url_for('views.index'))
     
-    return render_template('admin/dashboard/index.html')
+    return render_template('admin/dashboard.html')
+
+
+@view_bp.route('/admin/users')
+@login_required
+def admin_users():
+    """Admin user management"""
+    if session.get('role') != 'ADMIN':
+        flash('Bạn không có quyền truy cập trang này', 'error')
+        return redirect(url_for('views.index'))
+    
+    return render_template('admin/users.html')
 
 
 @view_bp.route('/admin/products')
@@ -104,7 +99,7 @@ def admin_products():
         flash('Bạn không có quyền truy cập trang này', 'error')
         return redirect(url_for('views.index'))
     
-    return render_template('admin/products/list.html')
+    return render_template('admin/products.html')
 
 
 @view_bp.route('/admin/orders')
@@ -115,26 +110,4 @@ def admin_orders():
         flash('Bạn không có quyền truy cập trang này', 'error')
         return redirect(url_for('views.index'))
     
-    return render_template('admin/orders/list.html')
-
-
-@view_bp.route('/admin/categories')
-@login_required
-def admin_categories():
-    """Admin category management"""
-    if session.get('role') != 'ADMIN':
-        flash('Bạn không có quyền truy cập trang này', 'error')
-        return redirect(url_for('views.index'))
-    
-    return render_template('admin/categories/list.html')
-
-
-@view_bp.route('/admin/brands')
-@login_required
-def admin_brands():
-    """Admin brand management"""
-    if session.get('role') != 'ADMIN':
-        flash('Bạn không có quyền truy cập trang này', 'error')
-        return redirect(url_for('views.index'))
-    
-    return render_template('admin/brands/list.html')
+    return render_template('admin/orders.html')

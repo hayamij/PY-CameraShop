@@ -190,6 +190,33 @@ class OrderRepositoryAdapter(IOrderRepository):
         finally:
             session.close()
     
+    def find_by_user_and_status(self, customer_id: int, status: str) -> List[Order]:
+        """Find orders by customer and status"""
+        session = self._session or get_session()
+        try:
+            # Convert status string (e.g., "PENDING") to the database value (e.g., "CHO_XAC_NHAN")
+            from app.domain.enums import OrderStatus as OrderStatusEnum
+            
+            # Try to get enum by name (e.g., "PENDING" -> OrderStatus.PENDING)
+            try:
+                status_enum = OrderStatusEnum[status]
+                status_value = status_enum.value
+            except KeyError:
+                # If not found by name, try by value
+                status_value = status
+            
+            order_models = session.query(OrderModel).filter(
+                OrderModel.user_id == customer_id,  # Use user_id, not customer_id
+                OrderModel.order_status == status_value  # Use order_status field name
+            ).order_by(OrderModel.created_at.desc()).all()
+            
+            return [self._to_domain_entity(om) for om in order_models]
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+    
     def find_by_date_range(self, start_date: datetime, end_date: datetime,
                           skip: int = 0, 
                           limit: int = 100) -> List[Order]:

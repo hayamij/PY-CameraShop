@@ -99,6 +99,7 @@ class ViewCartUseCase:
                     # Check stock availability
                     is_available = (
                         product.is_visible and
+                        product.stock_quantity is not None and
                         product.stock_quantity >= item.quantity
                     )
                     

@@ -21,6 +21,74 @@ def client(app):
     return app.test_client()
 
 
+@pytest.fixture
+def sample_product(app):
+    """Create a sample product for testing"""
+    from app.infrastructure.database.models.product_model import ProductModel, BrandModel, CategoryModel
+    from app.infrastructure.config import get_session
+    import uuid
+    
+    unique_suffix = str(uuid.uuid4())[:8]
+    
+    with app.app_context():
+        session = get_session()
+        
+        # Create brand
+        brand = BrandModel(
+            name=f'TestBrand_{unique_suffix}',
+            description='Test brand',
+            is_active=True
+        )
+        session.add(brand)
+        session.commit()
+        session.refresh(brand)
+        
+        # Create category
+        category = CategoryModel(
+            name=f'TestCategory_{unique_suffix}',
+            description='Test category',
+            is_active=True
+        )
+        session.add(category)
+        session.commit()
+        session.refresh(category)
+        
+        # Create product
+        product = ProductModel(
+            name=f'TestCamera_{unique_suffix}',
+            description='A test camera product',
+            price=1000.00,
+            stock_quantity=10,
+            category_id=category.category_id,
+            brand_id=brand.brand_id,
+            is_visible=True
+        )
+        session.add(product)
+        session.commit()
+        session.refresh(product)
+        product_id = product.product_id
+        brand_id = brand.brand_id
+        category_id = category.category_id
+        session.close()
+        
+    yield product_id
+    
+    # Cleanup
+    with app.app_context():
+        session = get_session()
+        product = session.get(ProductModel, product_id)
+        if product:
+            session.delete(product)
+        brand = session.get(BrandModel, brand_id)
+        if brand:
+            session.delete(brand)
+        category = session.get(CategoryModel, category_id)
+        if category:
+            session.delete(category)
+        session.commit()
+        session.close()
+
+
 class TestListProductsEndpoint:
     """Test suite for GET /api/products"""
     
@@ -115,22 +183,14 @@ class TestListProductsEndpoint:
 class TestGetProductDetailEndpoint:
     """Test suite for GET /api/products/<id>"""
     
-    def test_get_product_detail_success(self, client):
+    def test_get_product_detail_success(self, client, sample_product):
         """TC1: Get existing product detail"""
-        # First, get a product ID from list
-        list_response = client.get('/api/products?per_page=1')
-        products = list_response.get_json().get('products', [])
-        
-        if products:
-            product_id = products[0]['id']
-            response = client.get(f'/api/products/{product_id}')
-            assert response.status_code == 200
-            data = response.get_json()
-            assert data['success'] is True
-            assert 'product' in data
-            assert data['product']['id'] == product_id
-        else:
-            pytest.skip("No products available for testing")
+        response = client.get(f'/api/products/{sample_product}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        assert 'product' in data
+        assert data['product']['product_id'] == sample_product
             
     def test_get_product_detail_nonexistent(self, client):
         """TC2: Get nonexistent product"""
@@ -159,22 +219,19 @@ class TestGetProductDetailEndpoint:
 class TestProductRoutesIntegration:
     """Integration tests for product routes workflow"""
     
-    def test_list_then_detail_workflow(self, client):
+    def test_list_then_detail_workflow(self, client, sample_product):
         """TC1: Complete flow - list products then view detail"""
         # Step 1: List products
         list_response = client.get('/api/products?per_page=3')
         assert list_response.status_code == 200
         products = list_response.get_json().get('products', [])
+        assert len(products) > 0
         
-        # Step 2: Get detail of first product
-        if products:
-            product_id = products[0]['id']
-            detail_response = client.get(f'/api/products/{product_id}')
-            assert detail_response.status_code == 200
-            detail_data = detail_response.get_json()
-            assert detail_data['product']['id'] == product_id
-        else:
-            pytest.skip("No products for workflow test")
+        # Step 2: Get detail of the sample product
+        detail_response = client.get(f'/api/products/{sample_product}')
+        assert detail_response.status_code == 200
+        detail_data = detail_response.get_json()
+        assert detail_data['product']['product_id'] == sample_product
             
     def test_search_then_filter_workflow(self, client):
         """TC2: Search then apply additional filters"""
