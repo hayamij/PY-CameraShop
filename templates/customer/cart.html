@@ -97,7 +97,7 @@ function displayCart(cart) {
                         <tr>
                             <td>
                                 <div class="d-flex align-center gap-md">
-                                    <img src="${item.image_url || '/static/images/placeholder.jpg'}" 
+                                    <img src="${item.product_image || '/static/images/placeholder.jpg'}"
                                          alt="${item.product_name}" 
                                          style="width: 60px; height: 60px; object-fit: cover; border: 1px solid var(--color-border);">
                                     <div>
@@ -106,12 +106,13 @@ function displayCart(cart) {
                                     </div>
                                 </div>
                             </td>
-                            <td>${formatCurrency(item.unit_price)}</td>
+                            <td>${formatCurrency(item.price)}</td>
                             <td>
                                 <input type="number" 
                                        value="${item.quantity}" 
                                        min="1" 
-                                       max="${item.available_stock}"
+                                       max="${item.stock_available}"
+
                                        style="width: 80px;" 
                                        class="form-control"
                                        onchange="updateQuantity(${item.cart_item_id}, this.value)">

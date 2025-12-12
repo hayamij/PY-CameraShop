@@ -71,7 +71,7 @@
                     <tr>
                         <th>PRODUCT</th>
                         <th>STOCK</th>
-                        <th>ACTION</th>
+                        <th>PRICE</th>
                     </tr>
                 </thead>
                 <tbody id="lowStockProducts">
@@ -156,9 +156,12 @@ function displayLowStockProducts(products) {
         <tr>
             <td>${product.name}</td>
             <td class="font-weight-bold">${product.stock_quantity}</td>
-            <td><a href="/admin/products/${product.product_id}" class="btn btn-outline btn-sm">EDIT</a></td>
+            <td class="font-weight-bold">
+                ${formatCurrency(product.price)}
+            </td>
         </tr>
     `).join('');
+
 }
 
 loadDashboard();
