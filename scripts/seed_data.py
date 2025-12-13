@@ -28,9 +28,9 @@ def seed_admin_user(bcrypt):
     
     # Create admin
     admin = UserModel(
-        username='admin',
+        username='adminn',
         email='admin@camerashop.com',
-        password_hash=bcrypt.generate_password_hash('admin123').decode('utf-8'),
+        password_hash=bcrypt.generate_password_hash('123123').decode('utf-8'),
         full_name='Administrator',
         phone_number='0123456789',
         address='123 Admin Street, Camera City',
@@ -41,7 +41,7 @@ def seed_admin_user(bcrypt):
     
     db.session.add(admin)
     db.session.commit()
-    print("  ✅ Admin user created (username: admin, password: admin123)")
+    print("  ✅ Admin user created (username: adminn, password: 123123)")
     return admin
 
 

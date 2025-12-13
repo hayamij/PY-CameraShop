@@ -64,8 +64,8 @@ class PaymentMethod(Enum):
     """Payment method enumeration"""
     CASH = "TIEN_MAT"
     COD = "COD"  # Cash on Delivery
-    BANK_TRANSFER = "CHUYEN_KHOAN"  # Bank transfer / Chuyển khoản
-    CREDIT_CARD = "THE_CREDIT"
+    BANK_TRANSFER = "BANK_TRANSFER"  # Bank transfer / Chuyển khoản
+    CREDIT_CARD = "CREDIT_CARD"
     
     def __str__(self):
         return self.value

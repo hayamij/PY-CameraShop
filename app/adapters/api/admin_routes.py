@@ -160,7 +160,7 @@ def create_admin_routes(
                 {
                     'user_id': user.user_id,
                     'username': user.username,
-                    'email': user.email,
+                    'email': str(user.email),  # Convert Email value object to string
                     'full_name': user.full_name,
                     'phone_number': user.phone_number,
                     'address': user.address,
@@ -873,7 +873,7 @@ def create_admin_routes(
                         'order_id': o.order_id,
                         'customer_id': o.customer_id,
                         'customer_name': o.customer_name,
-                        'customer_email': o.customer_email,
+                        'customer_email': str(o.customer_email) if o.customer_email else None,
                         'total_amount': o.total_amount,
                         'status': o.status,
                         'payment_method': o.payment_method,

@@ -2,15 +2,28 @@
 
 .admin-body {
     background: #f5f5f5;
+    margin: 0;
+    padding: 0;
 }
 
 .admin-navbar {
     background: #000;
     border-bottom: none;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-.admin-navbar .logo,
+.admin-navbar .logo {
+    color: #fff;
+    font-size: 1.3em;
+}
+
 .admin-navbar .user-greeting {
+    color: #ccc;
+}
+
+.admin-navbar .user-name {
     color: #fff;
 }
 
@@ -40,6 +53,7 @@
     top: 70px;
     height: calc(100vh - 70px);
     overflow-y: auto;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-section {
@@ -54,10 +68,17 @@
     letter-spacing: 0.5px;
     margin-bottom: 12px;
     padding: 0 8px;
+    text-transform: uppercase;
 }
 
 .sidebar-menu {
     list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 4px;
 }
 
 .sidebar-link {
@@ -70,23 +91,30 @@
     border-radius: 8px;
     transition: all 0.2s ease;
     font-weight: 500;
-    margin-bottom: 4px;
+    font-size: 0.95em;
 }
 
 .sidebar-link:hover {
     background: #f5f5f5;
     color: #000;
+    transform: translateX(4px);
 }
 
 .sidebar-link.active {
     background: #000;
     color: #fff;
+    font-weight: 600;
+}
+
+.sidebar-link.active .sidebar-icon {
+    transform: scale(1.1);
 }
 
 .sidebar-icon {
-    font-size: 1.2em;
+    font-size: 1.3em;
     width: 24px;
     text-align: center;
+    transition: transform 0.2s ease;
 }
 
 /* Admin Content Area */
@@ -94,6 +122,7 @@
     padding: 32px;
     background: #f5f5f5;
     overflow-y: auto;
+    max-width: 1400px;
 }
 
 /* Admin Page Header */
