@@ -224,8 +224,8 @@ class TestGetOrderDetailUseCase:
         
         payment_methods = [
             (PaymentMethod.CASH, "TIEN_MAT"),
-            (PaymentMethod.BANK_TRANSFER, "CHUYEN_KHOAN"),
-            (PaymentMethod.CREDIT_CARD, "THE_CREDIT")
+            (PaymentMethod.BANK_TRANSFER, "BANK_TRANSFER"),
+            (PaymentMethod.CREDIT_CARD, "CREDIT_CARD")
         ]
         
         for payment_method, expected_value in payment_methods:

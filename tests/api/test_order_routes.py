@@ -51,8 +51,7 @@ def test_product(clean_db):
     
     category = CategoryModel(
         name=f'OrderCategory_{unique_suffix}',
-        description='Test',
-        is_active=True
+        description='Test'
     )
     clean_db.add(category)
     clean_db.commit()

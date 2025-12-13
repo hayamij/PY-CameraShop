@@ -100,8 +100,7 @@ def sample_category(clean_db):
     from app.infrastructure.database.models.product_model import CategoryModel
     category = CategoryModel(
         name=f'TestCategory_{uuid.uuid4().hex[:8]}',
-        description='Test Category',
-        is_active=True
+        description='Test Category'
     )
     clean_db.add(category)
     clean_db.commit()

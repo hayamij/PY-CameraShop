@@ -56,8 +56,7 @@ def test_product(clean_db):
     # Create category with unique name
     category = CategoryModel(
         name=f'TestCategory_{unique_suffix}',
-        description='Test category',
-        is_active=True
+        description='Test category'
     )
     clean_db.add(category)
     clean_db.commit()

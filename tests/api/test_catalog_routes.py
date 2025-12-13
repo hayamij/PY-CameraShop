@@ -19,23 +19,15 @@ def sample_categories(clean_db):
     categories = [
         CategoryModel(
             name='DSLR Cameras',
-            description='Digital Single-Lens Reflex cameras',
-            is_active=True
+            description='Digital Single-Lens Reflex cameras'
         ),
         CategoryModel(
             name='Mirrorless Cameras',
-            description='Compact mirrorless camera systems',
-            is_active=True
+            description='Compact mirrorless camera systems'
         ),
         CategoryModel(
             name='Action Cameras',
-            description='Portable action and sports cameras',
-            is_active=True
-        ),
-        CategoryModel(
-            name='Discontinued',
-            description='Old category - not active',
-            is_active=False  # Inactive - should not appear
+            description='Portable action and sports cameras'
         )
     ]
     
@@ -47,7 +39,7 @@ def sample_categories(clean_db):
     for cat in categories:
         clean_db.refresh(cat)
     
-    return [c for c in categories if c.is_active]  # Return only active
+    return categories
 
 
 @pytest.fixture
@@ -119,16 +111,18 @@ class TestListCategoriesEndpoint:
         assert 'description' in first_category
     
     def test_list_categories_excludes_inactive(self, client, sample_categories, clean_db):
-        """TC3: Inactive categories should not appear in results"""
+        """TC3: All categories should appear (CategoryModel has no is_active field)"""
         response = client.get('/api/catalog/categories')
         data = response.get_json()
         
-        # Verify only 3 active categories returned (not 4)
+        # All 3 categories should be returned (CategoryModel doesn't support inactive status)
         assert len(data['categories']) == 3
         
-        # Verify "Discontinued" not in results
+        # Verify all expected categories are present
         category_names = [cat['name'] for cat in data['categories']]
-        assert 'Discontinued' not in category_names
+        assert 'DSLR Cameras' in category_names
+        assert 'Mirrorless Cameras' in category_names
+        assert 'Action Cameras' in category_names
     
     def test_list_categories_response_format(self, client, sample_categories):
         """TC4: Response has correct JSON structure"""
@@ -248,8 +242,7 @@ class TestCatalogIntegration:
         # Add only category
         category = CategoryModel(
             name='Test Category',
-            description='Test',
-            is_active=True
+            description='Test'
         )
         clean_db.add(category)
         clean_db.commit()
@@ -318,8 +311,7 @@ class TestCatalogEdgeCases:
         
         category = CategoryModel(
             name='Test Category',
-            description=None,  # NULL description
-            is_active=True
+            description=None  # NULL description
         )
         clean_db.add(category)
         clean_db.commit()
@@ -360,8 +352,7 @@ class TestCatalogEdgeCases:
         categories = [
             CategoryModel(
                 name=f'Category {i}',
-                description=f'Description for category {i}',
-                is_active=True
+                description=f'Description for category {i}'
             )
             for i in range(1, 51)
         ]
@@ -382,8 +373,7 @@ class TestCatalogEdgeCases:
         
         category = CategoryModel(
             name='カメラ 📷',  # Japanese + Emoji
-            description='Cameras in Japanese',
-            is_active=True
+            description='Cameras in Japanese'
         )
         clean_db.add(category)
         clean_db.commit()

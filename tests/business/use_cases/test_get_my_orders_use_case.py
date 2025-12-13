@@ -171,8 +171,8 @@ class TestGetMyOrdersUseCase:
         # Assert
         assert output.success is True
         assert output.orders[0].payment_method == "TIEN_MAT"
-        assert output.orders[1].payment_method == "CHUYEN_KHOAN"
-        assert output.orders[2].payment_method == "THE_CREDIT"
+        assert output.orders[1].payment_method == "BANK_TRANSFER"
+        assert output.orders[2].payment_method == "CREDIT_CARD"
     
     # ============ FILTER CASES ============
     

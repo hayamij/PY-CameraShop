@@ -46,8 +46,7 @@ def sample_product(app):
         # Create category
         category = CategoryModel(
             name=f'TestCategory_{unique_suffix}',
-            description='Test category',
-            is_active=True
+            description='Test category'
         )
         session.add(category)
         session.commit()
