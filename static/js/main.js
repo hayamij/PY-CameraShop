@@ -22,6 +22,9 @@ function formatDate(dateString) {
 
 // Show loading overlay
 function showLoading() {
+    // Remove existing overlay if any
+    hideLoading();
+    
     const overlay = document.createElement('div');
     overlay.className = 'loading-overlay';
     overlay.id = 'loadingOverlay';
@@ -62,7 +65,9 @@ async function logout() {
         window.location.href = '/login';
     } catch (error) {
         hideLoading();
-        showAlert(error.message, 'error');
+        console.error('Logout error:', error);
+        // Even if API fails, still redirect to login
+        window.location.href = '/login';
     }
 }
 

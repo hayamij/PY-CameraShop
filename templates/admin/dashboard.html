@@ -1,88 +1,86 @@
-{% extends "base.html" %}
+{% extends "admin-base.html" %}
 
-{% block title %}Admin Dashboard - Camera Shop{% endblock %}
+{% block title %}Dashboard - Admin{% endblock %}
 
 {% block content %}
-<div class="mb-xl">
-    <h1>ADMIN DASHBOARD</h1>
-</div>
+<div class="admin-page">
+    <!-- Page Header -->
+    <div class="admin-page-header">
+        <h1 class="admin-page-title">Dashboard</h1>
+        <div class="admin-page-actions">
+            <button class="btn btn-outline" id="refreshBtn">🔄 REFRESH</button>
+        </div>
+    </div>
 
-<div class="grid grid-4 gap-lg mb-xl">
-    <div class="card">
-        <div class="card-body text-center p-lg">
-            <p class="text-secondary mb-sm">TOTAL USERS</p>
-            <p class="font-weight-bold" style="font-size: 2rem;" id="totalUsers">-</p>
+    <!-- Statistics Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 32px;">
+        <div style="background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
+            <div style="font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total Users</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #000;" id="totalUsers">-</div>
+        </div>
+        <div style="background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
+            <div style="font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total Products</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #000;" id="totalProducts">-</div>
+        </div>
+        <div style="background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
+            <div style="font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total Orders</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #000;" id="totalOrders">-</div>
+        </div>
+        <div style="background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
+            <div style="font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Pending Orders</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #fff3cd;" id="pendingOrders">-</div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body text-center p-lg">
-            <p class="text-secondary mb-sm">TOTAL PRODUCTS</p>
-            <p class="font-weight-bold" style="font-size: 2rem;" id="totalProducts">-</p>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-body text-center p-lg">
-            <p class="text-secondary mb-sm">TOTAL ORDERS</p>
-            <p class="font-weight-bold" style="font-size: 2rem;" id="totalOrders">-</p>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-body text-center p-lg">
-            <p class="text-secondary mb-sm">PENDING ORDERS</p>
-            <p class="font-weight-bold" style="font-size: 2rem;" id="pendingOrders">-</p>
-        </div>
-    </div>
-</div>
 
-<div class="grid grid-2 gap-lg">
-    <div class="card">
-        <div class="card-header">
-            <h3>RECENT ORDERS</h3>
+    <!-- Recent Orders and Low Stock -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px;">
+        <!-- Recent Orders -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 1.2rem; font-weight: 700; text-transform: uppercase; margin: 0;">Recent Orders</h2>
+                <a href="/admin/orders" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ORDER ID</th>
+                            <th>USER</th>
+                            <th>TOTAL</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOrders">
+                        <tr class="loading-row">
+                            <td colspan="4">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ORDER ID</th>
-                        <th>USER</th>
-                        <th>TOTAL</th>
-                        <th>STATUS</th>
-                    </tr>
-                </thead>
-                <tbody id="recentOrders">
-                    <tr>
-                        <td colspan="4" class="text-center">Loading...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
-            <a href="/admin/orders" class="btn btn-outline">VIEW ALL ORDERS</a>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-header">
-            <h3>LOW STOCK PRODUCTS</h3>
-        </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>PRODUCT</th>
-                        <th>STOCK</th>
-                        <th>PRICE</th>
-                    </tr>
-                </thead>
-                <tbody id="lowStockProducts">
-                    <tr>
-                        <td colspan="3" class="text-center">Loading...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
-            <a href="/admin/products" class="btn btn-outline">VIEW ALL PRODUCTS</a>
+
+        <!-- Low Stock Products -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 1.2rem; font-weight: 700; text-transform: uppercase; margin: 0;">Low Stock Products</h2>
+                <a href="/admin/products" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>PRODUCT</th>
+                            <th>STOCK</th>
+                            <th>PRICE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lowStockProducts">
+                        <tr class="loading-row">
+                            <td colspan="3">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -90,11 +88,11 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-
+// Load dashboard data
 async function loadDashboard() {
     try {
         showLoading();
+        console.log('Loading dashboard data...');
         
         const [usersRes, productsRes, ordersRes] = await Promise.all([
             API.admin.users.list({ page: 1, per_page: 100 }),
@@ -102,75 +100,131 @@ async function loadDashboard() {
             API.admin.orders.list({ page: 1, per_page: 100 })
         ]);
         
-        console.log('Users Response:', usersRes);
-        console.log('Products Response:', productsRes);
-        console.log('Orders Response:', ordersRes);
-        
+        console.log('Data loaded:', { usersRes, productsRes, ordersRes });
         hideLoading();
         
-        if (usersRes.success && usersRes.data) {
-            document.getElementById('totalUsers').textContent = usersRes.data.pagination.total || usersRes.data.pagination.total_users;
+        // Update statistics - users API returns nested data
+        if (usersRes.success && usersRes.data && usersRes.data.pagination) {
+            const totalUsers = usersRes.data.pagination.total_users || usersRes.data.pagination.total || 0;
+            document.getElementById('totalUsers').textContent = totalUsers;
         }
         
+        // Products API returns flat structure
         if (productsRes.success) {
-            document.getElementById('totalProducts').textContent = productsRes.total_products;
-            displayLowStockProducts(productsRes.products);
+            document.getElementById('totalProducts').textContent = productsRes.total_products || 0;
+            displayLowStockProducts(productsRes.products || []);
         }
         
+        // Orders API returns flat structure
         if (ordersRes.success) {
-            document.getElementById('totalOrders').textContent = ordersRes.total_orders;
-            const pending = ordersRes.orders.filter(o => o.status === 'CHO_XAC_NHAN').length;
+            document.getElementById('totalOrders').textContent = ordersRes.total_orders || 0;
+            const pending = (ordersRes.orders || []).filter(o => o.status === 'CHO_XAC_NHAN').length;
             document.getElementById('pendingOrders').textContent = pending;
-            displayRecentOrders(ordersRes.orders.slice(0, 5));
+            displayRecentOrders((ordersRes.orders || []).slice(0, 5));
         }
     } catch (error) {
         console.error('Dashboard Error:', error);
         hideLoading();
-        showAlert(error.message, 'error');
+        showAlert('Failed to load dashboard: ' + (error.message || 'Unknown error'), 'error');
+        
+        // Display error in tables
+        document.getElementById('recentOrders').innerHTML = `
+            <tr class="error-state">
+                <td colspan="4" style="color: #dc3545; text-align: center;">
+                    Failed to load data: ${error.message || 'Unknown error'}
+                </td>
+            </tr>
+        `;
+        document.getElementById('lowStockProducts').innerHTML = `
+            <tr class="error-state">
+                <td colspan="3" style="color: #dc3545; text-align: center;">
+                    Failed to load data: ${error.message || 'Unknown error'}
+                </td>
+            </tr>
+        `;
     }
 }
 
+// Display recent orders
 function displayRecentOrders(orders) {
     const tbody = document.getElementById('recentOrders');
     
     if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No orders found</td></tr>';
+        tbody.innerHTML = `
+            <tr class="empty-state">
+                <td colspan="4">
+                    <div class="empty-state-text">No orders yet</div>
+                </td>
+            </tr>
+        `;
         return;
     }
     
+    const statusMap = {
+        'CHO_XAC_NHAN': 'pending',
+        'DANG_GIAO': 'shipping',
+        'HOAN_THANH': 'completed',
+        'DA_HUY': 'cancelled'
+    };
+    const statusText = {
+        'CHO_XAC_NHAN': 'Pending',
+        'DANG_GIAO': 'Shipping',
+        'HOAN_THANH': 'Completed',
+        'DA_HUY': 'Cancelled'
+    };
+    
     tbody.innerHTML = orders.map(order => `
         <tr>
-            <td><a href="/orders/${order.order_id}">#${order.order_id}</a></td>
-            <td>${order.customer_email || order.customer_name || 'N/A'}</td>
-            <td>${formatCurrency(order.total_amount)}</td>
-            <td class="text-uppercase">${order.status}</td>
+            <td><strong>#${order.order_id}</strong></td>
+            <td>${escapeHtml(order.customer_email || order.customer_name || 'Guest')}</td>
+            <td><strong>${parseFloat(order.total_amount || 0).toLocaleString('vi-VN')}</strong></td>
+            <td>
+                <span class="status-badge ${statusMap[order.status] || 'pending'}">
+                    ${statusText[order.status] || order.status}
+                </span>
+            </td>
         </tr>
     `).join('');
 }
 
+// Display low stock products
 function displayLowStockProducts(products) {
     const lowStock = products.filter(p => p.stock_quantity < 10).slice(0, 5);
     const tbody = document.getElementById('lowStockProducts');
     
     if (lowStock.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center">No low stock products</td></tr>';
+        tbody.innerHTML = `
+            <tr class="empty-state">
+                <td colspan="3">
+                    <div class="empty-state-text">All products in stock</div>
+                </td>
+            </tr>
+        `;
         return;
     }
     
     tbody.innerHTML = lowStock.map(product => `
         <tr>
-            <td>${product.name}</td>
-            <td class="font-weight-bold">${product.stock_quantity}</td>
-            <td class="font-weight-bold">
-                ${formatCurrency(product.price)}
+            <td>${escapeHtml(product.name)}</td>
+            <td style="font-weight: 700; color: ${product.stock_quantity < 5 ? '#dc3545' : '#856404'}">
+                ${product.stock_quantity}
             </td>
+            <td><strong>${parseFloat(product.price || 0).toLocaleString('vi-VN')}</strong></td>
         </tr>
     `).join('');
-
 }
 
-loadDashboard();
+// Utility function
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
-});
+// Event listeners
+document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+
+// Initial load
+loadDashboard();
 </script>
 {% endblock %}

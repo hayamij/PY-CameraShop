@@ -205,9 +205,18 @@ class APIClient {
                 return this.request(`/admin/orders${query ? '?' + query : ''}`);
             },
             
+            create: (data) => this.request('/admin/orders', {
+                method: 'POST',
+                body: data
+            }),
+            
             updateStatus: (orderId, newStatus) => this.request(`/admin/orders/${orderId}/status`, {
                 method: 'PUT',
                 body: { new_status: newStatus }
+            }),
+            
+            delete: (orderId) => this.request(`/admin/orders/${orderId}`, {
+                method: 'DELETE'
             })
         }
     };

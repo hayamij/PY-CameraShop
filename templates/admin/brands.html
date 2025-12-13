@@ -1,0 +1,245 @@
+{% extends "admin-base.html" %}
+
+{% block title %}Brand Management - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <!-- Page Header -->
+    <div class="admin-page-header">
+        <h1 class="admin-page-title">Brand Management</h1>
+        <div class="admin-page-actions">
+            <button class="btn btn-primary" onclick="showCreateModal()">ADD BRAND</button>
+            <button class="btn btn-outline" id="refreshBtn">🔄 REFRESH</button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-filters">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label for="searchInput">SEARCH</label>
+                <input type="text" id="searchInput" placeholder="Search brands..." class="form-control">
+            </div>
+        </div>
+    </div>
+
+    <!-- Brands Table -->
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>DESCRIPTION</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="brandsTableBody">
+                <tr class="loading-row">
+                    <td colspan="4">Loading brands...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create/Edit Brand Modal -->
+<div id="brandModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">CREATE BRAND</h3>
+            <button class="btn-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="brandForm">
+                <input type="hidden" id="brandId">
+                
+                <div class="form-group">
+                    <label>BRAND NAME *</label>
+                    <input type="text" id="brandName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>DESCRIPTION</label>
+                    <textarea id="brandDescription" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal()">CANCEL</button>
+            <button class="btn btn-primary" onclick="saveBrand()">SAVE</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+async function loadBrands() {
+    try {
+        showLoading();
+        const response = await API.catalog.getBrands();
+        hideLoading();
+        
+        if (response.success) {
+            displayBrands(response.brands || []);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+let allBrands = [];
+let filteredBrands = [];
+
+function displayBrands(brands) {
+    allBrands = brands;
+    applyFilters();
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    
+    filteredBrands = allBrands.filter(brand => {
+        return !searchTerm || 
+            brand.name.toLowerCase().includes(searchTerm) ||
+            (brand.description && brand.description.toLowerCase().includes(searchTerm));
+    });
+    
+    renderBrands();
+}
+
+function renderBrands() {
+    const tbody = document.getElementById('brandsTableBody');
+    
+    if (filteredBrands.length === 0) {
+        tbody.innerHTML = `
+            <tr class="empty-state">
+                <td colspan="4">
+                    <div class="empty-state-icon">🏷️</div>
+                    <div class="empty-state-text">No brands found</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = filteredBrands.map(brand => `
+        <tr>
+            <td><strong>${brand.brand_id}</strong></td>
+            <td>${escapeHtml(brand.name)}</td>
+            <td>${escapeHtml(brand.description || '-')}</td>
+            <td>
+                <div class="table-actions">
+                    <button class="btn-table" onclick='showEditModal(${JSON.stringify(brand).replace(/'/g, "&apos;")})'>
+                        Edit
+                    </button>
+                    <button class="btn-table btn-danger" onclick="deleteBrand(${brand.brand_id})">
+                        Delete
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Utility functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showCreateModal() {
+    document.getElementById('modalTitle').textContent = 'CREATE BRAND';
+    document.getElementById('brandForm').reset();
+    document.getElementById('brandId').value = '';
+    document.getElementById('brandModal').style.display = 'block';
+}
+
+function showEditModal(brand) {
+    document.getElementById('modalTitle').textContent = 'EDIT BRAND';
+    document.getElementById('brandId').value = brand.brand_id;
+    document.getElementById('brandName').value = brand.name;
+    document.getElementById('brandDescription').value = brand.description || '';
+    document.getElementById('brandModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('brandModal').style.display = 'none';
+}
+
+async function saveBrand() {
+    const brandId = document.getElementById('brandId').value;
+    const data = {
+        name: document.getElementById('brandName').value,
+        description: document.getElementById('brandDescription').value
+    };
+    
+    if (!data.name) {
+        showAlert('Brand name is required', 'error');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = brandId
+            ? await API.admin.brands.update(parseInt(brandId), data)
+            : await API.admin.brands.create(data);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert(brandId ? 'Brand updated successfully' : 'Brand created successfully', 'success');
+            closeModal();
+            loadBrands();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+async function deleteBrand(brandId) {
+    if (!confirm('Are you sure you want to delete this brand? This action cannot be undone.')) return;
+    
+    try {
+        showLoading();
+        const response = await API.admin.brands.delete(brandId);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Brand deleted successfully', 'success');
+            loadBrands();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+// Event listeners
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('refreshBtn').addEventListener('click', loadBrands);
+
+// Make functions global
+window.showCreateModal = showCreateModal;
+window.showEditModal = showEditModal;
+window.closeModal = closeModal;
+window.saveBrand = saveBrand;
+window.deleteBrand = deleteBrand;
+
+// Initial load
+loadBrands();
+
+});
+</script>
+{% endblock %}

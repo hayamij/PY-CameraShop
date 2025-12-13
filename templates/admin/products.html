@@ -1,64 +1,73 @@
-{% extends "base.html" %}
+{% extends "admin-base.html" %}
 
-{% block title %}Manage Products - Camera Shop{% endblock %}
+{% block title %}Product Management - Admin{% endblock %}
 
 {% block content %}
-<div class="mb-lg d-flex justify-between align-center">
-    <h1>MANAGE PRODUCTS</h1>
-    <div class="d-flex gap-md">
-        <a href="/admin" class="btn btn-outline">← BACK TO DASHBOARD</a>
-        <button class="btn btn-primary" onclick="showAddModal()">ADD PRODUCT</button>
-    </div>
-</div>
-
-<div class="card mb-lg">
-    <div class="card-body">
-        <div class="grid grid-4 gap-md">
-            <input type="text" 
-                   id="searchInput" 
-                   placeholder="Search products..."
-                   class="form-control">
-            <select id="categoryFilter" class="form-control">
-                <option value="">ALL CATEGORIES</option>
-            </select>
-            <select id="brandFilter" class="form-control">
-                <option value="">ALL BRANDS</option>
-            </select>
-            <select id="sortSelect" class="form-control">
-                <option value="newest">NEWEST FIRST</option>
-                <option value="oldest">OLDEST FIRST</option>
-                <option value="price_asc">PRICE: LOW TO HIGH</option>
-                <option value="price_desc">PRICE: HIGH TO LOW</option>
-                <option value="name_asc">NAME: A TO Z</option>
-                <option value="name_desc">NAME: Z TO A</option>
-            </select>
+<div class="admin-page">
+    <!-- Page Header -->
+    <div class="admin-page-header">
+        <h1 class="admin-page-title">Product Management</h1>
+        <div class="admin-page-actions">
+            <button class="btn btn-primary" onclick="showAddModal()">ADD PRODUCT</button>
+            <button class="btn btn-outline" id="refreshBtn">🔄 REFRESH</button>
         </div>
     </div>
-</div>
 
-<div class="card">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>NAME</th>
-                <th>CATEGORY</th>
-                <th>BRAND</th>
-                <th>PRICE</th>
-                <th>STOCK</th>
-                <th>STATUS</th>
-                <th>ACTIONS</th>
-            </tr>
-        </thead>
-        <tbody id="productsTable">
-            <tr>
-                <td colspan="8" class="text-center">Loading...</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+    <!-- Filters -->
+    <div class="admin-filters">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label for="searchInput">SEARCH</label>
+                <input type="text" id="searchInput" placeholder="Search products..." class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="categoryFilter">CATEGORY</label>
+                <select id="categoryFilter" class="form-control">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="brandFilter">BRAND</label>
+                <select id="brandFilter" class="form-control">
+                    <option value="">All Brands</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sortSelect">SORT BY</label>
+                <select id="sortSelect" class="form-control">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="name_asc">Name: A to Z</option>
+                    <option value="name_desc">Name: Z to A</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
-<div id="pagination" class="mt-lg text-center"></div>
+    <!-- Products Table -->
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>CATEGORY</th>
+                    <th>BRAND</th>
+                    <th>PRICE</th>
+                    <th>STOCK</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="productsTableBody">
+                <tr class="loading-row">
+                    <td colspan="7">Loading products...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <!-- Product Modal -->
 <div id="productModal" class="modal">
@@ -127,8 +136,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-let currentPage = 1;
-const pageSize = 20;
 let currentFilters = {
     search: '',
     category: null,
@@ -139,19 +146,23 @@ let currentFilters = {
 async function loadProducts() {
     try {
         showLoading();
-        const response = await API.products.list(
-            currentPage, 
-            pageSize, 
-            currentFilters.search,
-            currentFilters.category,
-            currentFilters.brand,
-            currentFilters.sort
-        );
+        const params = {
+            page: 1,
+            per_page: 100
+        };
+        
+        // Only add filters if they have actual values (not null/undefined/empty)
+        if (currentFilters.search) params.search_query = currentFilters.search;
+        if (currentFilters.category) params.category_id = currentFilters.category;
+        if (currentFilters.brand) params.brand_id = currentFilters.brand;
+        if (currentFilters.sort) params.sort_by = currentFilters.sort;
+        
+        const response = await API.products.list(params);
         hideLoading();
         
         if (response.success) {
-            displayProducts(response.products);
-            displayPagination(response.total, response.page, response.page_size);
+            // API returns flat: response.products
+            displayProducts(response.products || []);
         } else {
             showAlert(response.error, 'error');
         }
@@ -191,31 +202,37 @@ async function loadFilters() {
 }
 
 function displayProducts(products) {
-    const tbody = document.getElementById('productsTable');
+    const tbody = document.getElementById('productsTableBody');
     
     if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No products found</td></tr>';
+        tbody.innerHTML = `
+            <tr class="empty-state">
+                <td colspan="7">
+                    <div class="empty-state-icon">📦</div>
+                    <div class="empty-state-text">No products found</div>
+                </td>
+            </tr>
+        `;
         return;
     }
     
     tbody.innerHTML = products.map(product => `
         <tr>
             <td>${product.product_id}</td>
-            <td>${product.name}</td>
-            <td>${product.category_name}</td>
-            <td>${product.brand_name}</td>
-            <td>${formatCurrency(product.price, 'USD')}</td>
-            <td class="font-weight-bold ${product.stock_quantity < 10 ? 'text-danger' : ''}">
+            <td>${escapeHtml(product.name)}</td>
+            <td>${escapeHtml(product.category_name)}</td>
+            <td>${escapeHtml(product.brand_name)}</td>
+            <td>${parseFloat(product.price || 0).toLocaleString('vi-VN')}</td>
+            <td style="font-weight: ${product.stock_quantity < 10 ? '700; color: #dc3545' : '600'}">
                 ${product.stock_quantity}
             </td>
-            <td class="text-uppercase">${product.is_active ? 'ACTIVE' : 'INACTIVE'}</td>
             <td>
-                <div class="d-flex gap-sm">
-                    <button class="btn btn-outline btn-sm" onclick="editProduct(${product.product_id})">
-                        EDIT
+                <div class="table-actions">
+                    <button class="btn-table" onclick="editProduct(${product.product_id})">
+                        Edit
                     </button>
-                    <button class="btn btn-outline btn-sm" onclick="deleteProduct(${product.product_id})">
-                        DELETE
+                    <button class="btn-table btn-danger" onclick="deleteProduct(${product.product_id})">
+                        Delete
                     </button>
                 </div>
             </td>
@@ -255,7 +272,7 @@ function showAddModal() {
     document.getElementById('modalTitle').textContent = 'ADD PRODUCT';
     document.getElementById('productForm').reset();
     document.getElementById('productId').value = '';
-    document.getElementById('productModal').classList.add('show');
+    document.getElementById('productModal').style.display = 'block';
 }
 
 async function editProduct(productId) {
@@ -276,7 +293,7 @@ async function editProduct(productId) {
             document.getElementById('productStock').value = product.stock_quantity;
             document.getElementById('productImage').value = product.image_url || '';
             document.getElementById('productSpecs').value = JSON.stringify(product.specifications || {}, null, 2);
-            document.getElementById('productModal').classList.add('show');
+            document.getElementById('productModal').style.display = 'block';
         } else {
             showAlert(response.error, 'error');
         }
@@ -292,11 +309,10 @@ async function saveProduct() {
         name: document.getElementById('productName').value,
         description: document.getElementById('productDescription').value,
         category_id: parseInt(document.getElementById('productCategory').value),
-        brand_id: parseInt(document.getElementById('productBrand').value),
+        brand_id: parseInt(document.getElementById('productBrand').value) || null,
         price: parseFloat(document.getElementById('productPrice').value),
         stock_quantity: parseInt(document.getElementById('productStock').value),
-        image_url: document.getElementById('productImage').value || null,
-        specifications: null
+        image_url: document.getElementById('productImage').value || ''
     };
     
     try {
@@ -343,7 +359,7 @@ async function deleteProduct(productId) {
 }
 
 function closeModal() {
-    document.getElementById('productModal').classList.remove('show');
+    document.getElementById('productModal').style.display = 'none';
 }
 
 function changePage(page) {
@@ -351,6 +367,14 @@ function changePage(page) {
     loadProducts();
 }
 
+// Utility function
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Event listeners
 document.getElementById('searchInput').addEventListener('input', debounce((e) => {
     currentFilters.search = e.target.value;
     currentPage = 1;
@@ -371,16 +395,17 @@ document.getElementById('brandFilter').addEventListener('change', (e) => {
 
 document.getElementById('sortSelect').addEventListener('change', (e) => {
     currentFilters.sort = e.target.value;
-    currentPage = 1;
     loadProducts();
 });
 
+document.getElementById('refreshBtn').addEventListener('click', loadProducts);
+
+// Make functions global
 window.showAddModal = showAddModal;
 window.editProduct = editProduct;
 window.saveProduct = saveProduct;
 window.deleteProduct = deleteProduct;
 window.closeModal = closeModal;
-window.changePage = changePage;
 
 loadFilters();
 loadProducts();

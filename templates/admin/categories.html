@@ -1,0 +1,245 @@
+{% extends "admin-base.html" %}
+
+{% block title %}Category Management - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <!-- Page Header -->
+    <div class="admin-page-header">
+        <h1 class="admin-page-title">Category Management</h1>
+        <div class="admin-page-actions">
+            <button class="btn btn-primary" onclick="showCreateModal()">ADD CATEGORY</button>
+            <button class="btn btn-outline" id="refreshBtn">🔄 REFRESH</button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-filters">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label for="searchInput">SEARCH</label>
+                <input type="text" id="searchInput" placeholder="Search categories..." class="form-control">
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>DESCRIPTION</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="categoriesTableBody">
+                <tr class="loading-row">
+                    <td colspan="4">Loading categories...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create/Edit Category Modal -->
+<div id="categoryModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">CREATE CATEGORY</h3>
+            <button class="btn-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                
+                <div class="form-group">
+                    <label>CATEGORY NAME *</label>
+                    <input type="text" id="categoryName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>DESCRIPTION</label>
+                    <textarea id="categoryDescription" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal()">CANCEL</button>
+            <button class="btn btn-primary" onclick="saveCategory()">SAVE</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+async function loadCategories() {
+    try {
+        showLoading();
+        const response = await API.catalog.getCategories();
+        hideLoading();
+        
+        if (response.success) {
+            displayCategories(response.categories || []);
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+let allCategories = [];
+let filteredCategories = [];
+
+function displayCategories(categories) {
+    allCategories = categories;
+    applyFilters();
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    
+    filteredCategories = allCategories.filter(cat => {
+        return !searchTerm || 
+            cat.name.toLowerCase().includes(searchTerm) ||
+            (cat.description && cat.description.toLowerCase().includes(searchTerm));
+    });
+    
+    renderCategories();
+}
+
+function renderCategories() {
+    const tbody = document.getElementById('categoriesTableBody');
+    
+    if (filteredCategories.length === 0) {
+        tbody.innerHTML = `
+            <tr class="empty-state">
+                <td colspan="4">
+                    <div class="empty-state-icon">📂</div>
+                    <div class="empty-state-text">No categories found</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = filteredCategories.map(category => `
+        <tr>
+            <td><strong>${category.category_id}</strong></td>
+            <td>${escapeHtml(category.name)}</td>
+            <td>${escapeHtml(category.description || '-')}</td>
+            <td>
+                <div class="table-actions">
+                    <button class="btn-table" onclick='showEditModal(${JSON.stringify(category).replace(/'/g, "&apos;")})'>
+                        Edit
+                    </button>
+                    <button class="btn-table btn-danger" onclick="deleteCategory(${category.category_id})">
+                        Delete
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Utility functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showCreateModal() {
+    document.getElementById('modalTitle').textContent = 'CREATE CATEGORY';
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryModal').style.display = 'block';
+}
+
+function showEditModal(category) {
+    document.getElementById('modalTitle').textContent = 'EDIT CATEGORY';
+    document.getElementById('categoryId').value = category.category_id;
+    document.getElementById('categoryName').value = category.name;
+    document.getElementById('categoryDescription').value = category.description || '';
+    document.getElementById('categoryModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('categoryModal').style.display = 'none';
+}
+
+async function saveCategory() {
+    const categoryId = document.getElementById('categoryId').value;
+    const data = {
+        name: document.getElementById('categoryName').value,
+        description: document.getElementById('categoryDescription').value
+    };
+    
+    if (!data.name) {
+        showAlert('Category name is required', 'error');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = categoryId
+            ? await API.admin.categories.update(parseInt(categoryId), data)
+            : await API.admin.categories.create(data);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert(categoryId ? 'Category updated successfully' : 'Category created successfully', 'success');
+            closeModal();
+            loadCategories();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+async function deleteCategory(categoryId) {
+    if (!confirm('Are you sure you want to delete this category? This action cannot be undone.')) return;
+    
+    try {
+        showLoading();
+        const response = await API.admin.categories.delete(categoryId);
+        hideLoading();
+        
+        if (response.success) {
+            showAlert('Category deleted successfully', 'success');
+            loadCategories();
+        } else {
+            showAlert(response.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showAlert(error.message, 'error');
+    }
+}
+
+// Event listeners
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('refreshBtn').addEventListener('click', loadCategories);
+
+// Make functions global
+window.showCreateModal = showCreateModal;
+window.showEditModal = showEditModal;
+window.closeModal = closeModal;
+window.saveCategory = saveCategory;
+window.deleteCategory = deleteCategory;
+
+// Initial load
+loadCategories();
+
+});
+</script>
+{% endblock %}

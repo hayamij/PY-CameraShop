@@ -1,0 +1,23 @@
+<!-- Shared Navigation Header -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <a href="/" class="header-logo">CAMERA SHOP</a>
+            <nav class="header-nav">
+                <a href="/">HOME</a>
+                <a href="/products">PRODUCTS</a>
+                {% if session.get('user_id') %}
+                    <a href="/cart">CART</a>
+                    <a href="/orders">ORDERS</a>
+                    {% if session.get('role') == 'ADMIN' %}
+                        <a href="/admin">ADMIN</a>
+                    {% endif %}
+                    <a href="#" onclick="logout()">LOGOUT</a>
+                {% else %}
+                    <a href="/login">LOGIN</a>
+                    <a href="/register">REGISTER</a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+</header>

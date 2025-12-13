@@ -111,3 +111,25 @@ def admin_orders():
         return redirect(url_for('views.index'))
     
     return render_template('admin/orders.html')
+
+
+@view_bp.route('/admin/categories')
+@login_required
+def admin_categories():
+    """Admin category management"""
+    if session.get('role') != 'ADMIN':
+        flash('Bạn không có quyền truy cập trang này', 'error')
+        return redirect(url_for('views.index'))
+    
+    return render_template('admin/categories.html')
+
+
+@view_bp.route('/admin/brands')
+@login_required
+def admin_brands():
+    """Admin brand management"""
+    if session.get('role') != 'ADMIN':
+        flash('Bạn không có quyền truy cập trang này', 'error')
+        return redirect(url_for('views.index'))
+    
+    return render_template('admin/brands.html')

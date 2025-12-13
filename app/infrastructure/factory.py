@@ -148,6 +148,8 @@ def register_blueprints(app):
     from ..business.use_cases.delete_brand_use_case import DeleteBrandUseCase
     from ..business.use_cases.list_orders_use_case import ListOrdersUseCase
     from ..business.use_cases.update_order_status_use_case import UpdateOrderStatusUseCase
+    from ..business.use_cases.create_order_by_admin_use_case import CreateOrderByAdminUseCase
+    from ..business.use_cases.delete_order_use_case import DeleteOrderUseCase
     
     # Create scoped session for request lifecycle
     session = create_scoped_session()
@@ -241,6 +243,12 @@ def register_blueprints(app):
         user_repository=user_repository
     )
     update_order_status_use_case = UpdateOrderStatusUseCase(order_repository)
+    create_order_by_admin_use_case = CreateOrderByAdminUseCase(
+        order_repository=order_repository,
+        product_repository=product_repository,
+        user_repository=user_repository
+    )
+    delete_order_use_case = DeleteOrderUseCase(order_repository)
     
     # Import and initialize blueprints
     from ..adapters.api import auth_bp, init_auth_routes
@@ -299,7 +307,9 @@ def register_blueprints(app):
         update_brand_use_case=update_brand_use_case,
         delete_brand_use_case=delete_brand_use_case,
         list_orders_use_case=list_orders_use_case,
-        update_order_status_use_case=update_order_status_use_case
+        update_order_status_use_case=update_order_status_use_case,
+        create_order_by_admin_use_case=create_order_by_admin_use_case,
+        delete_order_use_case=delete_order_use_case
     )
     
     # Create catalog routes blueprint

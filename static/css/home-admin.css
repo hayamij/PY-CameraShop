@@ -12,6 +12,12 @@ body {
     gap: 24px;
 }
 
+.grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
+}
+
 .card {
     background: var(--color-white, #ffffff);
     border-radius: 12px;
@@ -23,6 +29,20 @@ body {
 .card:hover {
     box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
     transform: translateY(-4px);
+}
+
+.card-hover {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.card-hover:hover {
+    text-decoration: none;
+}
+
+.card-hover:hover .card-body {
+    background: #f9f9f9;
 }
 
 .card-body {

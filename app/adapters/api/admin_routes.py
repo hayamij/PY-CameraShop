@@ -75,6 +75,15 @@ from app.business.use_cases.update_order_status_use_case import (
     UpdateOrderStatusUseCase,
     UpdateOrderStatusInputData
 )
+from app.business.use_cases.create_order_by_admin_use_case import (
+    CreateOrderByAdminUseCase,
+    CreateOrderByAdminInputData,
+    OrderItemInput
+)
+from app.business.use_cases.delete_order_use_case import (
+    DeleteOrderUseCase,
+    DeleteOrderInputData
+)
 from app.adapters.api.auth_helpers import login_required
 from functools import wraps
 
@@ -110,7 +119,9 @@ def create_admin_routes(
     update_brand_use_case: UpdateBrandUseCase,
     delete_brand_use_case: DeleteBrandUseCase,
     list_orders_use_case: ListOrdersUseCase,
-    update_order_status_use_case: UpdateOrderStatusUseCase
+    update_order_status_use_case: UpdateOrderStatusUseCase,
+    create_order_by_admin_use_case: CreateOrderByAdminUseCase,
+    delete_order_use_case: DeleteOrderUseCase
 ) -> Blueprint:
     """Create admin routes blueprint"""
     
@@ -901,6 +912,63 @@ def create_admin_routes(
                 'error': str(e)
             }), 500
     
+    @admin_bp.route('/orders', methods=['POST'])
+    @admin_required
+    def create_order():
+        """Create a new order (admin)"""
+        try:
+            data = request.get_json()
+            
+            # Validate required fields (user_id is optional)
+            required_fields = ['customer_email', 'customer_phone', 'shipping_address', 'payment_method', 'items']
+            for field in required_fields:
+                if field not in data:
+                    return jsonify({
+                        'success': False,
+                        'error': f'{field} is required'
+                    }), 400
+            
+            # Parse items
+            items = []
+            for item in data['items']:
+                items.append(OrderItemInput(
+                    product_id=item['product_id'],
+                    quantity=item['quantity'],
+                    unit_price=item['unit_price']
+                ))
+            
+            # Create input data
+            input_data = CreateOrderByAdminInputData(
+                customer_email=data['customer_email'],
+                customer_phone=data['customer_phone'],
+                shipping_address=data['shipping_address'],
+                payment_method=data['payment_method'],
+                items=items,
+                notes=data.get('notes', ''),
+                user_id=data.get('user_id')  # Optional
+            )
+            
+            # Execute use case
+            output_data = create_order_by_admin_use_case.execute(input_data)
+            
+            if not output_data.success:
+                return jsonify({
+                    'success': False,
+                    'error': output_data.message
+                }), 400
+            
+            return jsonify({
+                'success': True,
+                'order_id': output_data.order_id,
+                'message': output_data.message
+            }), 201
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
     @admin_bp.route('/orders/<int:order_id>/status', methods=['PUT'])
     @admin_required
     def update_order_status(order_id: int):
@@ -922,6 +990,34 @@ def create_admin_routes(
             
             # Execute use case
             output_data = update_order_status_use_case.execute(input_data)
+            
+            if not output_data.success:
+                return jsonify({
+                    'success': False,
+                    'error': output_data.message
+                }), 400
+            
+            return jsonify({
+                'success': True,
+                'message': output_data.message
+            }), 200
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    @admin_bp.route('/orders/<int:order_id>', methods=['DELETE'])
+    @admin_required
+    def delete_order(order_id: int):
+        """Delete an order (admin)"""
+        try:
+            # Create input data
+            input_data = DeleteOrderInputData(order_id=order_id)
+            
+            # Execute use case
+            output_data = delete_order_use_case.execute(input_data)
             
             if not output_data.success:
                 return jsonify({
