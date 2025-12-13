@@ -221,9 +221,13 @@ class Order:
             InvalidOrderStatusTransitionException: If transition is invalid
         """
         if not self._status.can_transition_to(OrderStatus.SHIPPING):
+            allowed = []
+            if self._status == OrderStatus.PENDING:
+                allowed = ["SHIPPING", "CANCELLED"]
             raise InvalidOrderStatusTransitionException(
                 str(self._status),
-                str(OrderStatus.SHIPPING)
+                str(OrderStatus.SHIPPING),
+                allowed
             )
         self._status = OrderStatus.SHIPPING
         self._updated_at = datetime.now()
@@ -236,9 +240,13 @@ class Order:
             InvalidOrderStatusTransitionException: If transition is invalid
         """
         if not self._status.can_transition_to(OrderStatus.COMPLETED):
+            allowed = []
+            if self._status == OrderStatus.SHIPPING:
+                allowed = ["COMPLETED"]
             raise InvalidOrderStatusTransitionException(
                 str(self._status),
-                str(OrderStatus.COMPLETED)
+                str(OrderStatus.COMPLETED),
+                allowed
             )
         self._status = OrderStatus.COMPLETED
         self._updated_at = datetime.now()
@@ -255,9 +263,13 @@ class Order:
             raise OrderAlreadyShippedException(self._id or 0)
         
         if not self._status.can_transition_to(OrderStatus.CANCELLED):
+            allowed = []
+            if self._status == OrderStatus.PENDING:
+                allowed = ["SHIPPING", "CANCELLED"]
             raise InvalidOrderStatusTransitionException(
                 str(self._status),
-                str(OrderStatus.CANCELLED)
+                str(OrderStatus.CANCELLED),
+                allowed
             )
         
         self._status = OrderStatus.CANCELLED

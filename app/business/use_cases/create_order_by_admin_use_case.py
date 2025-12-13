@@ -1,11 +1,13 @@
 """Create order by admin use case"""
 from dataclasses import dataclass
 from typing import List
+from decimal import Decimal
 from app.business.ports.order_repository import IOrderRepository
 from app.business.ports.product_repository import IProductRepository
 from app.business.ports.user_repository import IUserRepository
 from app.domain.entities.order import Order, OrderItem
 from app.domain.value_objects.email import Email
+from app.domain.value_objects.money import Money
 from app.domain.enums import OrderStatus, PaymentMethod
 
 
@@ -84,39 +86,40 @@ class CreateOrderByAdminUseCase:
                     )
                 
                 # Create order item
+                unit_price_money = Money(Decimal(str(item_input.unit_price)))
                 order_item = OrderItem(
                     product_id=item_input.product_id,
                     product_name=product.name,
                     quantity=item_input.quantity,
-                    unit_price=item_input.unit_price
+                    unit_price=unit_price_money
                 )
                 order_items.append(order_item)
                 subtotal += item_input.quantity * item_input.unit_price
             
-            # Calculate totals (simplified - no tax/shipping for admin created orders)
-            tax = 0.0
-            shipping_fee = 0.0
-            total = subtotal + tax + shipping_fee
+            # Get customer_id (use user_id if provided, otherwise use 1 as guest placeholder)
+            # Note: For guest orders, we use customer_id=1 (admin/system user) as placeholder
+            customer_id = input_data.user_id if input_data.user_id else 1
             
-            # Create order (user_id can be None for guest orders)
+            # For guest orders (customer_id=0), we should store email and phone in notes
+            notes = input_data.notes
+            if not input_data.user_id:
+                notes = f"Guest Order - Email: {input_data.customer_email}, Phone: {input_data.customer_phone}"
+                if input_data.notes:
+                    notes += f"\nNotes: {input_data.notes}"
+            
+            # Create order
             order = Order(
-                user_id=input_data.user_id,
-                customer_email=Email(input_data.customer_email),
-                customer_phone=input_data.customer_phone,
-                shipping_address=input_data.shipping_address,
-                payment_method=PaymentMethod(input_data.payment_method),
+                customer_id=customer_id,
                 items=order_items,
-                subtotal=subtotal,
-                tax=tax,
-                shipping_fee=shipping_fee,
-                total_amount=total,
-                notes=input_data.notes,
-                status=OrderStatus.CHO_XAC_NHAN
+                payment_method=PaymentMethod[input_data.payment_method],
+                shipping_address=input_data.shipping_address,
+                phone_number=input_data.customer_phone,
+                notes=notes
             )
             
             # Save order
             saved_order = self.order_repository.save(order)
-            order_id = saved_order.order_id
+            order_id = saved_order.id
             
             return CreateOrderByAdminOutputData(
                 success=True,

@@ -277,30 +277,30 @@ class TestCartBehavior:
         assert item.quantity == 2
     
     def test_get_nonexistent_item(self):
-        """Should raise error when getting non-existent item"""
+        """Should return None when getting non-existent item"""
         cart = Cart(customer_id=1)
         
-        with pytest.raises(ProductNotFoundException):
-            cart.get_item(product_id=999)
+        item = cart.get_item(product_id=999)
+        assert item is None
 
 
 class TestCartValidation:
     """Test Cart validation methods"""
     
-    def test_validate_for_checkout_with_items(self):
+    def test_ensure_not_empty_with_items(self):
         """Should validate successfully when cart has items"""
         cart = Cart(customer_id=1)
         cart.add_item(product_id=1, quantity=2)
         
         # Should not raise
-        cart.validate_for_checkout()
+        cart.ensure_not_empty()
     
-    def test_validate_for_checkout_empty_cart(self):
+    def test_ensure_not_empty_raises_for_empty_cart(self):
         """Should raise error for empty cart"""
         cart = Cart(customer_id=1)
         
         with pytest.raises(EmptyCartException):
-            cart.validate_for_checkout()
+            cart.ensure_not_empty()
 
 
 class TestCartEquality:

@@ -101,3 +101,5 @@ class BrandRepositoryAdapter(IBrandRepository):
         """Update existing ORM model from domain entity"""
         model.name = entity.name
         model.description = entity.description
+        model.logo_url = entity.logo_url
+        model.is_active = entity.is_active

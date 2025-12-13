@@ -88,16 +88,6 @@ class InvalidProductPriceException(DomainException):
 
 
 # Order-related exceptions
-class InvalidOrderStatusTransitionException(DomainException):
-    """Raised when order status transition is invalid"""
-    
-    def __init__(self, current_status: str, attempted_status: str):
-        super().__init__(
-            f"Cannot change order status from {current_status} to {attempted_status}",
-            "INVALID_ORDER_STATUS_TRANSITION"
-        )
-
-
 class EmptyOrderException(DomainException):
     """Raised when trying to create an order with no items"""
     

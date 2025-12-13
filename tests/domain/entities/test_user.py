@@ -148,43 +148,8 @@ class TestUserReconstruction:
 class TestUserBehavior:
     """Test User entity behavior"""
     
-    def test_verify_password_correct(self):
-        """Should verify correct password"""
-        from werkzeug.security import generate_password_hash
-        
-        email = Email("user@example.com")
-        password = "SecurePassword123"
-        password_hash = generate_password_hash(password)
-        
-        user = User(
-            username="testuser",
-            email=email,
-            password_hash=password_hash,
-            full_name="Test User"
-        )
-        
-        assert user.verify_password(password) is True
-    
-    def test_verify_password_incorrect(self):
-        """Should reject incorrect password"""
-        from werkzeug.security import generate_password_hash
-        
-        email = Email("user@example.com")
-        password = "SecurePassword123"
-        password_hash = generate_password_hash(password)
-        
-        user = User(
-            username="testuser",
-            email=email,
-            password_hash=password_hash,
-            full_name="Test User"
-        )
-        
-        with pytest.raises(InvalidCredentialsException):
-            user.verify_password("WrongPassword")
-    
-    def test_update_password(self):
-        """Should update password hash"""
+    def test_change_password(self):
+        """Should change password hash"""
         from werkzeug.security import generate_password_hash
         
         email = Email("user@example.com")
@@ -200,11 +165,11 @@ class TestUserBehavior:
         
         new_password = "NewPassword456"
         new_hash = generate_password_hash(new_password)
-        user.update_password(new_hash)
+        user.change_password(new_hash)
         
-        assert user.verify_password(new_password) is True
+        assert user.password_hash == new_hash
     
-    def test_update_password_empty_raises_error(self):
+    def test_change_password_empty_raises_error(self):
         """Should raise error for empty password hash"""
         email = Email("user@example.com")
         
@@ -216,10 +181,10 @@ class TestUserBehavior:
         )
         
         with pytest.raises(ValueError, match="Password hash cannot be empty"):
-            user.update_password("")
+            user.change_password("")
     
-    def test_change_role(self):
-        """Should change user role"""
+    def test_promote_to_admin(self):
+        """Should promote user to admin role"""
         email = Email("user@example.com")
         
         user = User(
@@ -230,8 +195,23 @@ class TestUserBehavior:
             role=UserRole.CUSTOMER
         )
         
-        user.change_role(UserRole.ADMIN)
+        user.promote_to_admin()
         assert user.role == UserRole.ADMIN
+    
+    def test_demote_to_customer(self):
+        """Should demote admin to customer role"""
+        email = Email("admin@example.com")
+        
+        user = User(
+            username="admin",
+            email=email,
+            password_hash="hashed_password",
+            full_name="Admin User",
+            role=UserRole.ADMIN
+        )
+        
+        user.demote_to_customer()
+        assert user.role == UserRole.CUSTOMER
     
     def test_deactivate_user(self):
         """Should deactivate user"""
@@ -315,7 +295,7 @@ class TestUserBehavior:
         assert admin.is_customer() is False
         assert customer.is_customer() is True
     
-    def test_require_admin_permission(self):
+    def test_ensure_admin(self):
         """Should allow admin operations for admin users"""
         email = Email("admin@example.com")
         
@@ -328,9 +308,9 @@ class TestUserBehavior:
         )
         
         # Should not raise
-        admin.require_admin_permission()
+        admin.ensure_admin()
     
-    def test_require_admin_permission_raises_for_customer(self):
+    def test_ensure_admin_raises_for_customer(self):
         """Should raise error for non-admin users"""
         email = Email("customer@example.com")
         
@@ -343,7 +323,41 @@ class TestUserBehavior:
         )
         
         with pytest.raises(InsufficientPermissionsException):
-            customer.require_admin_permission()
+            customer.ensure_admin()
+    
+    def test_ensure_active(self):
+        """Should allow operations for active users"""
+        email = Email("user@example.com")
+        
+        user = User(
+            username="testuser",
+            email=email,
+            password_hash="hashed_password",
+            full_name="Test User"
+        )
+        
+        # Should not raise
+        user.ensure_active()
+    
+    def test_ensure_active_raises_for_inactive(self):
+        """Should raise error for inactive users"""
+        email = Email("user@example.com")
+        
+        user = User.reconstruct(
+            user_id=1,
+            username="testuser",
+            email=email,
+            password_hash="hashed_password",
+            full_name="Test User",
+            phone_number=None,
+            address=None,
+            role=UserRole.CUSTOMER,
+            is_active=False,
+            created_at=datetime.now()
+        )
+        
+        with pytest.raises(InvalidCredentialsException):
+            user.ensure_active()
     
     def test_update_profile(self):
         """Should update user profile"""

@@ -122,7 +122,7 @@ class TestOrderCreation:
         order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="Please deliver in the morning"
@@ -130,7 +130,7 @@ class TestOrderCreation:
         
         assert order.customer_id == 1
         assert len(order.items) == 2
-        assert order.payment_method == PaymentMethod.CASH_ON_DELIVERY
+        assert order.payment_method == PaymentMethod.COD
         assert order.shipping_address == "123 Test Street, City"
         assert order.phone_number == "0123456789"
         assert order.notes == "Please deliver in the morning"
@@ -146,7 +146,7 @@ class TestOrderCreation:
         order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789"
         )
@@ -161,7 +161,7 @@ class TestOrderCreation:
         order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="  123 Test Street, City  ",
             phone_number="  0123456789  ",
             notes="  Please deliver in the morning  "
@@ -177,7 +177,7 @@ class TestOrderCreation:
             Order(
                 customer_id=1,
                 items=[],
-                payment_method=PaymentMethod.CASH_ON_DELIVERY,
+                payment_method=PaymentMethod.COD,
                 shipping_address="123 Test Street, City",
                 phone_number="0123456789"
             )
@@ -188,7 +188,7 @@ class TestOrderCreation:
             Order(
                 customer_id=1,
                 items=None,
-                payment_method=PaymentMethod.CASH_ON_DELIVERY,
+                payment_method=PaymentMethod.COD,
                 shipping_address="123 Test Street, City",
                 phone_number="0123456789"
             )
@@ -202,7 +202,7 @@ class TestOrderCreation:
             Order(
                 customer_id=0,
                 items=items,
-                payment_method=PaymentMethod.CASH_ON_DELIVERY,
+                payment_method=PaymentMethod.COD,
                 shipping_address="123 Test Street, City",
                 phone_number="0123456789"
             )
@@ -216,7 +216,7 @@ class TestOrderCreation:
             Order(
                 customer_id=1,
                 items=items,
-                payment_method=PaymentMethod.CASH_ON_DELIVERY,
+                payment_method=PaymentMethod.COD,
                 shipping_address="Short",
                 phone_number="0123456789"
             )
@@ -230,7 +230,7 @@ class TestOrderCreation:
             Order(
                 customer_id=1,
                 items=items,
-                payment_method=PaymentMethod.CASH_ON_DELIVERY,
+                payment_method=PaymentMethod.COD,
                 shipping_address="123 Test Street, City",
                 phone_number="123"
             )
@@ -251,7 +251,7 @@ class TestOrderReconstruction:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="Test notes",
@@ -278,7 +278,7 @@ class TestOrderBehavior:
         order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789"
         )
@@ -297,7 +297,7 @@ class TestOrderBehavior:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="",
@@ -320,7 +320,7 @@ class TestOrderBehavior:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="",
@@ -341,7 +341,7 @@ class TestOrderBehavior:
         order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789"
         )
@@ -359,7 +359,7 @@ class TestOrderBehavior:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="",
@@ -369,7 +369,7 @@ class TestOrderBehavior:
             updated_at=datetime.now()
         )
         
-        with pytest.raises(InvalidOrderStatusTransitionException):
+        with pytest.raises(OrderAlreadyShippedException):
             order.cancel()
     
     def test_is_pending(self):
@@ -380,7 +380,7 @@ class TestOrderBehavior:
         pending_order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789"
         )
@@ -389,7 +389,7 @@ class TestOrderBehavior:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="",
@@ -410,7 +410,7 @@ class TestOrderBehavior:
         pending_order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789"
         )
@@ -419,7 +419,7 @@ class TestOrderBehavior:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="",
@@ -441,7 +441,7 @@ class TestOrderBehavior:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="",
@@ -461,7 +461,7 @@ class TestOrderBehavior:
         pending_order = Order(
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789"
         )
@@ -470,7 +470,7 @@ class TestOrderBehavior:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street, City",
             phone_number="0123456789",
             notes="",
@@ -498,7 +498,7 @@ class TestOrderEquality:
             order_id=1,
             customer_id=1,
             items=items1,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="Address 1",
             phone_number="0123456789",
             notes="",
@@ -534,7 +534,7 @@ class TestOrderEquality:
             order_id=1,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street",
             phone_number="0123456789",
             notes="",
@@ -548,7 +548,7 @@ class TestOrderEquality:
             order_id=2,
             customer_id=1,
             items=items,
-            payment_method=PaymentMethod.CASH_ON_DELIVERY,
+            payment_method=PaymentMethod.COD,
             shipping_address="123 Test Street",
             phone_number="0123456789",
             notes="",

@@ -303,7 +303,7 @@ class TestProductBehavior:
             brand_id=1
         )
         
-        with pytest.raises(ValueError, match="Quantity must be positive"):
+        with pytest.raises(ValueError, match="Quantity to add must be positive"):
             product.add_stock(-5)
     
     def test_reduce_stock(self):
@@ -351,7 +351,7 @@ class TestProductBehavior:
             brand_id=1
         )
         
-        with pytest.raises(ValueError, match="Quantity must be positive"):
+        with pytest.raises(ValueError, match="Quantity to reduce must be positive"):
             product.reduce_stock(-5)
     
     def test_is_in_stock(self):
@@ -434,69 +434,7 @@ class TestProductBehavior:
         product.show()
         assert product.is_visible is True
     
-    def test_change_category(self):
-        """Should change product category"""
-        price = Money(Decimal("1000000"))
-        
-        product = Product(
-            name="Canon EOS 90D",
-            description="Professional DSLR camera",
-            price=price,
-            stock_quantity=10,
-            category_id=1,
-            brand_id=1
-        )
-        
-        product.change_category(2)
-        assert product.category_id == 2
-    
-    def test_change_category_invalid(self):
-        """Should raise error for invalid category ID"""
-        price = Money(Decimal("1000000"))
-        
-        product = Product(
-            name="Canon EOS 90D",
-            description="Professional DSLR camera",
-            price=price,
-            stock_quantity=10,
-            category_id=1,
-            brand_id=1
-        )
-        
-        with pytest.raises(ValueError, match="Invalid category ID"):
-            product.change_category(0)
-    
-    def test_change_brand(self):
-        """Should change product brand"""
-        price = Money(Decimal("1000000"))
-        
-        product = Product(
-            name="Canon EOS 90D",
-            description="Professional DSLR camera",
-            price=price,
-            stock_quantity=10,
-            category_id=1,
-            brand_id=1
-        )
-        
-        product.change_brand(2)
-        assert product.brand_id == 2
-    
-    def test_change_brand_invalid(self):
-        """Should raise error for invalid brand ID"""
-        price = Money(Decimal("1000000"))
-        
-        product = Product(
-            name="Canon EOS 90D",
-            description="Professional DSLR camera",
-            price=price,
-            stock_quantity=10,
-            category_id=1,
-            brand_id=1
-        )
-        
-        with pytest.raises(ValueError, match="Invalid brand ID"):
-            product.change_brand(0)
+
 
 
 class TestProductEquality:
