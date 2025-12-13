@@ -10,8 +10,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-pages.css') }}">
     {% block extra_css %}{% endblock %}
     
-    <!-- Chart.js for data visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Plotly.js for data visualization -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 </head>
 <body>
     <!-- Shared Header (same as customer pages) -->
@@ -26,27 +26,21 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="/admin" class="sidebar-link {% if request.path == '/admin' %}active{% endif %}">
-                    <span class="sidebar-icon">📊</span>
                     <span class="sidebar-text">Dashboard</span>
                 </a>
                 <a href="/admin/users" class="sidebar-link {% if request.path == '/admin/users' %}active{% endif %}">
-                    <span class="sidebar-icon">👥</span>
                     <span class="sidebar-text">Users</span>
                 </a>
                 <a href="/admin/products" class="sidebar-link {% if request.path == '/admin/products' %}active{% endif %}">
-                    <span class="sidebar-icon">📦</span>
                     <span class="sidebar-text">Products</span>
                 </a>
                 <a href="/admin/orders" class="sidebar-link {% if request.path == '/admin/orders' %}active{% endif %}">
-                    <span class="sidebar-icon">📝</span>
                     <span class="sidebar-text">Orders</span>
                 </a>
                 <a href="/admin/categories" class="sidebar-link {% if request.path == '/admin/categories' %}active{% endif %}">
-                    <span class="sidebar-icon">📂</span>
                     <span class="sidebar-text">Categories</span>
                 </a>
                 <a href="/admin/brands" class="sidebar-link {% if request.path == '/admin/brands' %}active{% endif %}">
-                    <span class="sidebar-icon">🏷️</span>
                     <span class="sidebar-text">Brands</span>
                 </a>
             </nav>

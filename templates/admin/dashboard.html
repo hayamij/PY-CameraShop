@@ -8,7 +8,7 @@
     <div class="admin-page-header">
         <h1 class="admin-page-title">Dashboard</h1>
         <div class="admin-page-actions">
-            <button class="btn btn-outline" id="refreshBtn">🔄 REFRESH</button>
+            <button class="btn btn-outline" id="refreshBtn">REFRESH</button>
         </div>
     </div>
 
@@ -29,6 +29,31 @@
         <div style="background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
             <div style="font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Pending Orders</div>
             <div style="font-size: 2.5rem; font-weight: 700; color: #fff3cd;" id="pendingOrders">-</div>
+        </div>
+    </div>
+
+    <!-- Data Visualization Charts (Plotly) -->
+    <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 1.3rem; font-weight: 700; text-transform: uppercase; margin-bottom: 24px; color: #000;">📊 Biểu Đồ Thống Kê</h2>
+        
+        <!-- Row 1: Revenue & Order Status -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div id="revenueChart"></div>
+            </div>
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div id="statusChart"></div>
+            </div>
+        </div>
+        
+        <!-- Row 2: Category & User Registration -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px;">
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div id="categoryChart"></div>
+            </div>
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div id="userChart"></div>
+            </div>
         </div>
     </div>
 
@@ -87,6 +112,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Chart Data from Backend -->
+<script id="chartData" type="application/json">
+{
+    "revenue": {{ revenue_chart | tojson | safe if revenue_chart else 'null' }},
+    "status": {{ status_chart | tojson | safe if status_chart else 'null' }},
+    "category": {{ category_chart | tojson | safe if category_chart else 'null' }},
+    "user": {{ user_chart | tojson | safe if user_chart else 'null' }}
+}
+</script>
+
 <script>
 // Load dashboard data
 async function loadDashboard() {
@@ -221,10 +256,53 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Render Plotly Charts
+function renderCharts() {
+    try {
+        // Get chart data from script tag
+        const chartDataElement = document.getElementById('chartData');
+        if (!chartDataElement) {
+            console.warn('No chart data found');
+            return;
+        }
+        
+        const chartData = JSON.parse(chartDataElement.textContent);
+        
+        // Revenue Chart
+        if (chartData.revenue) {
+            const revenueData = JSON.parse(chartData.revenue);
+            Plotly.newPlot('revenueChart', revenueData.data, revenueData.layout, {responsive: true});
+        }
+        
+        // Status Chart
+        if (chartData.status) {
+            const statusData = JSON.parse(chartData.status);
+            Plotly.newPlot('statusChart', statusData.data, statusData.layout, {responsive: true});
+        }
+        
+        // Category Chart
+        if (chartData.category) {
+            const categoryData = JSON.parse(chartData.category);
+            Plotly.newPlot('categoryChart', categoryData.data, categoryData.layout, {responsive: true});
+        }
+        
+        // User Chart
+        if (chartData.user) {
+            const userData = JSON.parse(chartData.user);
+            Plotly.newPlot('userChart', userData.data, userData.layout, {responsive: true});
+        }
+    } catch (error) {
+        console.error('Error rendering charts:', error);
+    }
+}
+
 // Event listeners
-document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+document.getElementById('refreshBtn').addEventListener('click', function() {
+    location.reload();
+});
 
 // Initial load
 loadDashboard();
+renderCharts();
 </script>
 {% endblock %}
