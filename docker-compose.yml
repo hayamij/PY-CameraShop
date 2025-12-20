@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: camerashop-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./database-setup.sql:/docker-entrypoint-initdb.d/database-setup.sql
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Password123 -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - camerashop-network
+
+  # Flask Application
+  web:
+    build: .
+    container_name: camerashop-web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - DATABASE_URL=mssql+pyodbc://sa:YourStrong@Password123@sqlserver:1433/CameraShopDB?driver=ODBC+Driver+17+for+SQL+Server
+      - SECRET_KEY=your-secret-key-here-change-in-production
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/venv
+      - /app/__pycache__
+    networks:
+      - camerashop-network
+    command: >
+      sh -c "
+        echo 'Waiting for SQL Server to be ready...' &&
+        sleep 15 &&
+        echo 'Initializing database...' &&
+        python scripts/init_sqlserver_docker.py &&
+        echo 'Starting Flask application...' &&
+        python app.py
+      "
+
+volumes:
+  sqlserver_data:
+    driver: local
+
+networks:
+  camerashop-network:
+    driver: bridge
