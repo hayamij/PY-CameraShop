@@ -1,72 +1,66 @@
-# 📷 PY-CameraShop
+# PY-CameraShop
 
-> **E-commerce Website for Camera & Accessories**  
-> Built with Flask following Clean Architecture principles
-
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)](https://flask.palletsprojects.com/)
-[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red.svg)](https://www.sqlalchemy.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-481%20passed-brightgreen.svg)](tests/)
+**E-commerce Website for Camera & Accessories**
+Built with Flask following Clean Architecture principles
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
-**PY-CameraShop** là website bán máy ảnh & phụ kiện được xây dựng với Flask framework, tuân theo **Clean Architecture** nghiêm ngặt để đảm bảo:
+**PY-CameraShop** is a camera and accessories e-commerce website built with the Flask framework, strictly following **Clean Architecture** to ensure:
 
-- ✅ **Maintainability** - Code dễ bảo trì và mở rộng
-- ✅ **Testability** - Logic nghiệp vụ hoàn toàn độc lập (481 tests passing)
-- ✅ **Scalability** - Kiến trúc có khả năng mở rộng cao
-- ✅ **Independence** - Không phụ thuộc vào framework hay database cụ thể
+- **Maintainability** - Code is easy to maintain and extend
+- **Testability** - Business logic is completely independent (481 tests passing)
+- **Scalability** - Highly scalable architecture
+- **Independence** - No dependency on specific frameworks or databases
 
-### 🎉 **Project Status: PRODUCTION READY**
+### Project Status: PRODUCTION READY
 
-✅ **ALL PHASES COMPLETED:**
-- Phase 1: Database Setup ✅
-- Phase 2: Infrastructure Layer ✅
-- Phase 3: Repository Adapters ✅  
-- Phase 4: HTTP Controllers (34+ API endpoints) ✅
-- Phase 5: Frontend Interface (Full-stack UI) ✅
-- Phase 6: Testing (1105/1105 tests passing - 100% coverage) ✅
-- Phase 7: Admin Dashboard with Analytics ✅
-
----
-
-### 🌟 Key Features
-
-#### 🔓 For Guests (Không cần đăng nhập):
-- 🏠 Browse homepage with featured products
-- 🔍 Advanced search and filter (category, brand, price range)
-- 📄 View detailed product information with specs
-- 📂 Browse by categories and brands
-- 💰 Real-time price display in VND
-
-#### 👤 For Customers (Khách hàng):
-- 🔐 Register / Login with secure password hashing
-- 🛒 Shopping cart management (add, update, remove items)
-- 💳 Place orders with multiple payment methods (COD, Bank Transfer, Credit Card)
-- 📦 View complete order history with status tracking
-- ❌ Cancel pending orders
-- 👤 Profile management (update info, addresses)
-- 📧 Email validation and phone number verification
-
-#### 👨‍💼 For Admins (Quản trị viên):
-- 📊 Rich admin dashboard with Plotly charts & real-time analytics
-- 📈 Revenue tracking with daily/weekly/monthly trends
-- 📦 Complete product management (Create, Read, Update, Delete)
-- 🛍️ Order management with status updates & tracking
-- 👥 User account management (Create, Update, Delete, Role changes)
-- 📂 Category & Brand management
-- 🔍 Advanced search and filtering for all entities
-- 📉 Low stock alerts & inventory management
-- 💵 Sales reports & revenue analytics
+All phases completed:
+- Phase 1: Database Setup
+- Phase 2: Infrastructure Layer
+- Phase 3: Repository Adapters
+- Phase 4: HTTP Controllers (34+ API endpoints)
+- Phase 5: Frontend Interface (Full-stack UI)
+- Phase 6: Testing (1105/1105 tests passing - 100% coverage)
+- Phase 7: Admin Dashboard with Analytics
 
 ---
 
-## 🏗️ Architecture
+## Key Features
 
-Dự án tuân theo **Clean Architecture** với 4 layers:
+### For Guests (No login required)
+- Browse homepage with featured products
+- Advanced search and filter (category, brand, price range)
+- View detailed product information with specs
+- Browse by categories and brands
+- Real-time price display in VND
+
+### For Customers
+- Register / Login with secure password hashing
+- Shopping cart management (add, update, remove items)
+- Place orders with multiple payment methods (COD, Bank Transfer, Credit Card)
+- View complete order history with status tracking
+- Cancel pending orders
+- Profile management (update info, addresses)
+- Email validation and phone number verification
+
+### For Admins
+- Rich admin dashboard with Plotly charts & real-time analytics
+- Revenue tracking with daily/weekly/monthly trends
+- Complete product management (Create, Read, Update, Delete)
+- Order management with status updates & tracking
+- User account management (Create, Update, Delete, Role changes)
+- Category & Brand management
+- Advanced search and filtering for all entities
+- Low stock alerts & inventory management
+- Sales reports & revenue analytics
+
+---
+
+## Architecture
+
+The project follows **Clean Architecture** with 4 layers:
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -93,120 +87,106 @@ Dự án tuân theo **Clean Architecture** với 4 layers:
 └─────────────────────────────────────────────┘
 ```
 
-### 📁 Project Structure
+### Project Structure
 
 ```
 PY-CameraShop/
-├── 📄 app.py                    # 🚀 Main entry point (RUN THIS)
-├── 📄 database-setup.sql        # 📊 Database schema definition
-├── 📄 requirements.txt          # 📦 Python dependencies
-├── 📄 README.md                 # 📖 Project documentation (this file)
-├── 📄 LICENSE                   # ⚖️ License information
-├── 🔒 .env                      # 🔐 Environment variables (not in git)
-├── 📋 .env.example              # 📋 Example environment config
-├── 🚫 .gitignore                # 🚫 Git ignore rules
+├── app.py                    # Main entry point (RUN THIS)
+├── database-setup.sql        # Database schema definition
+├── requirements.txt          # Python dependencies
+├── README.md                 # Project documentation (this file)
+├── LICENSE                   # License information
+├── .env                      # Environment variables (not in git)
+├── .env.example              # Example environment config
+├── .gitignore                # Git ignore rules
 │
-├── 📁 app/                      # 🏛️ Main application (Clean Architecture)
-│   ├── domain/                  # Layer 1: Domain entities & business rules
-│   │   ├── entities/           # Pure business entities (User, Product, Order, Cart)
-│   │   ├── exceptions/         # Domain exceptions
-│   │   ├── value_objects/      # Immutable concepts (Email, Money, Address)
-│   │   └── enums.py            # Domain enumerations
-│   ├── business/                # Layer 2: Use cases & business logic
-│   │   ├── dto/                # Data Transfer Objects (Input/Output)
-│   │   ├── ports/              # Repository interfaces (contracts)
-│   │   └── use_cases/          # Use case implementations
-│   ├── adapters/                # Layer 3: Controllers, repositories, presenters
-│   │   ├── api/                # REST API controllers
-│   │   ├── views/              # Frontend view routes
-│   │   ├── presenters/         # Output formatters
-│   │   └── repositories/       # Repository implementations
-│   └── infrastructure/          # Layer 4: Frameworks & tools
-│       ├── config/             # Configuration & database setup
-│       ├── database/           # SQLAlchemy models
-│       └── factory.py          # Application factory (DI container)
+├── app/                      # Main application (Clean Architecture)
+│   ├── domain/               # Layer 1: Domain entities & business rules
+│   │   ├── entities/         # Pure business entities (User, Product, Order, Cart)
+│   │   ├── exceptions/       # Domain exceptions
+│   │   ├── value_objects/    # Immutable concepts (Email, Money, Address)
+│   │   └── enums.py          # Domain enumerations
+│   ├── business/             # Layer 2: Use cases & business logic
+│   │   ├── dto/              # Data Transfer Objects (Input/Output)
+│   │   ├── ports/            # Repository interfaces (contracts)
+│   │   └── use_cases/        # Use case implementations
+│   ├── adapters/             # Layer 3: Controllers, repositories, presenters
+│   │   ├── api/              # REST API controllers
+│   │   ├── views/            # Frontend view routes
+│   │   ├── presenters/       # Output formatters
+│   │   └── repositories/     # Repository implementations
+│   └── infrastructure/       # Layer 4: Frameworks & tools
+│       ├── config/           # Configuration & database setup
+│       ├── database/         # SQLAlchemy models
+│       └── factory.py        # Application factory (DI container)
 │
-├── 📁 scripts/                  # 🔧 Utility scripts
-│   ├── init_db.py              # Initialize database
-│   ├── seed_data.py            # Seed sample data
-│   ├── simple_seed.py          # Simple data seeding
-│   └── setup_database.py       # Database setup utility
+├── scripts/                  # Utility scripts
+│   ├── init_db.py            # Initialize database
+│   ├── seed_data.py          # Seed sample data
+│   ├── simple_seed.py        # Simple data seeding
+│   └── setup_database.py     # Database setup utility
 │
-├── 📁 static/                   # 🎨 Frontend assets
-│   ├── css/                    # Stylesheets (common.css, admin-layout.css, etc.)
-│   ├── js/                     # JavaScript files (home.js, cart.js, etc.)
-│   └── images/                 # Image assets
+├── static/                   # Frontend assets
+│   ├── css/                  # Stylesheets
+│   ├── js/                   # JavaScript files
+│   └── images/               # Image assets
 │
-├── 📁 template/                 # 🖼️ Jinja2 HTML templates
-│   ├── base.html               # User base template
-│   ├── admin_base.html         # Admin base template
-│   ├── index.html              # Homepage
-│   ├── auth/                   # Authentication pages (login, register)
-│   ├── products/               # Product pages (list, detail, search)
-│   ├── cart/                   # Cart pages (view, checkout)
-│   ├── orders/                 # Order pages (my_orders, detail)
-│   ├── errors/                 # Error pages (404, 500)
-│   └── admin/                  # Admin pages (dashboard, products, orders, etc.)
-│       ├── dashboard/          # Admin dashboard
-│       ├── products/           # Product management
-│       ├── orders/             # Order management
-│       ├── brands/             # Brand management
-│       └── categories/         # Category management
+├── template/                 # Jinja2 HTML templates
+│   ├── base.html             # User base template
+│   ├── admin_base.html       # Admin base template
+│   ├── index.html            # Homepage
+│   ├── auth/                 # Authentication pages
+│   ├── products/             # Product pages
+│   ├── cart/                 # Cart pages
+│   ├── orders/               # Order pages
+│   ├── errors/               # Error pages (404, 500)
+│   └── admin/                # Admin pages
+│       ├── dashboard/
+│       ├── products/
+│       ├── orders/
+│       ├── brands/
+│       └── categories/
 │
-├── 📁 tests/                    # 🧪 Unit & integration tests (481 tests)
-│   ├── business/               # Business logic tests
-│   └── integration/            # Integration tests
+├── tests/                    # Unit & integration tests (481 tests)
+│   ├── business/             # Business logic tests
+│   └── integration/          # Integration tests
 │
-├── 📁 migrations/               # 🔄 Database migrations (Alembic)
-│   └── versions/               # Migration version files
+├── migrations/               # Database migrations (Alembic)
+│   └── versions/             # Migration version files
 │
-├── 📁 instance/                 # 💾 Instance-specific files
-│   └── camerashop.db           # SQLite database (production)
+├── instance/                 # Instance-specific files
+│   └── camerashop.db         # SQLite database (production)
 │
-├── 📁 materials/                # 📚 Documentation & references
-│   ├── mega-prompt.md          # Clean Architecture guidelines
-│   ├── QUICK_START.md          # Quick start guide
-│   ├── CLEANUP_SUMMARY.md      # Project cleanup summary
-│   └── ...                     # Other documentation
-│
-└── 📁 venv/                     # 🐍 Python virtual environment (not in git)
+└── materials/                # Documentation & references
+    ├── mega-prompt.md
+    ├── QUICK_START.md
+    ├── CLEANUP_SUMMARY.md
+    └── ...
 ```
 
-#### 🏛️ Clean Architecture Layers Explained
+### Clean Architecture Layers Explained
 
 **Layer 1: Domain (`app/domain/`)**
-- Pure business entities with **zero dependencies** on frameworks
-- Rich with behavior - business rules enforced here
-- Self-validating entities
-- Examples: `User`, `Product`, `Order`, `Cart` entities
+Pure business entities with zero dependencies on frameworks. Rich with behavior — business rules are enforced here. Self-validating entities. Examples: `User`, `Product`, `Order`, `Cart` entities.
 
 **Layer 2: Business (`app/business/`)**
-- Use case orchestration (application logic)
-- Input/Output DTOs for data transfer
-- Repository interfaces (ports) - business defines contracts
-- Examples: `PlaceOrderUseCase`, `AddToCartUseCase`
+Use case orchestration (application logic). Input/Output DTOs for data transfer. Repository interfaces (ports) — the business layer defines contracts. Examples: `PlaceOrderUseCase`, `AddToCartUseCase`.
 
 **Layer 3: Adapters (`app/adapters/`)**
-- REST API controllers handling HTTP requests
-- Repository implementations (database adapters)
-- Presenters for output formatting
-- View routes for HTML rendering
+REST API controllers handling HTTP requests. Repository implementations (database adapters). Presenters for output formatting. View routes for HTML rendering.
 
 **Layer 4: Infrastructure (`app/infrastructure/`)**
-- Flask application factory
-- Database configuration (SQLAlchemy)
-- ORM models (mapped to domain entities)
-- Dependency injection wiring
+Flask application factory. Database configuration (SQLAlchemy). ORM models (mapped to domain entities). Dependency injection wiring.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- **Python 3.11+** (3.10+ supported)
-- **pip** package manager
-- **Virtual environment** (recommended)
+- Python 3.11+ (3.10+ supported)
+- pip package manager
+- Virtual environment (recommended)
 
 ### Installation
 
@@ -240,10 +220,7 @@ pip install -r requirements.txt
 
 5. **Initialize database**
 ```bash
-# Run database setup
 python scripts/init_db.py
-
-# Seed sample data (30 products, test users)
 python scripts/seed_data.py
 ```
 
@@ -254,7 +231,7 @@ python app.py
 
 Application will be available at: **http://localhost:5000**
 
-### 🧪 Test Accounts
+### Test Accounts
 
 After seeding, use these accounts:
 
@@ -270,7 +247,7 @@ After seeding, use these accounts:
 
 ---
 
-## 📦 Tech Stack
+## Tech Stack
 
 ### Backend
 - **Flask 3.0.0** - Web framework
@@ -293,16 +270,16 @@ After seeding, use these accounts:
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
-### 🔐 Authentication Endpoints (4 endpoints)
+### Authentication Endpoints (4 endpoints)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/api/auth/register` | Register new user | ❌ |
-| POST | `/api/auth/login` | Login user | ❌ |
-| POST | `/api/auth/logout` | Logout user | ✅ |
-| GET | `/api/auth/me` | Get current user info | ✅ |
+| POST | `/api/auth/register` | Register new user | No |
+| POST | `/api/auth/login` | Login user | No |
+| POST | `/api/auth/logout` | Logout user | Yes |
+| GET | `/api/auth/me` | Get current user info | Yes |
 
 **Example: Register**
 ```json
@@ -317,12 +294,12 @@ POST /api/auth/register
 }
 ```
 
-### 📦 Product Endpoints (2 endpoints)
+### Product Endpoints (2 endpoints)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| GET | `/api/products` | List products (with filters) | ❌ |
-| GET | `/api/products/<id>` | Get product detail | ❌ |
+| GET | `/api/products` | List products (with filters) | No |
+| GET | `/api/products/<id>` | Get product detail | No |
 
 **Query Parameters for /api/products:**
 - `page` - Page number (default: 1)
@@ -333,21 +310,21 @@ POST /api/auth/register
 - `min_price`, `max_price` - Price range
 - `sort_by` - Sort option (newest, oldest, price_asc, price_desc)
 
-### 🗂️ Catalog Endpoints (2 endpoints)
+### Catalog Endpoints (2 endpoints)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| GET | `/api/catalog/categories` | List all categories | ❌ |
-| GET | `/api/catalog/brands` | List all brands | ❌ |
+| GET | `/api/catalog/categories` | List all categories | No |
+| GET | `/api/catalog/brands` | List all brands | No |
 
-### 🛒 Cart Endpoints (4 endpoints)
+### Cart Endpoints (4 endpoints)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| GET | `/api/cart` | View cart | ✅ |
-| POST | `/api/cart/add` | Add item to cart | ✅ |
-| PUT | `/api/cart/items/<item_id>` | Update cart item quantity | ✅ |
-| DELETE | `/api/cart/items/<item_id>` | Remove item from cart | ✅ |
+| GET | `/api/cart` | View cart | Yes |
+| POST | `/api/cart/add` | Add item to cart | Yes |
+| PUT | `/api/cart/items/<item_id>` | Update cart item quantity | Yes |
+| DELETE | `/api/cart/items/<item_id>` | Remove item from cart | Yes |
 
 **Example: Add to Cart**
 ```json
@@ -358,14 +335,14 @@ POST /api/cart/add
 }
 ```
 
-### 📋 Order Endpoints (4 endpoints)
+### Order Endpoints (4 endpoints)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/api/orders` | Place new order | ✅ |
-| GET | `/api/orders/my-orders` | Get user's orders | ✅ |
-| GET | `/api/orders/<id>` | Get order detail | ✅ |
-| POST | `/api/orders/<id>/cancel` | Cancel order | ✅ |
+| POST | `/api/orders` | Place new order | Yes |
+| GET | `/api/orders/my-orders` | Get user's orders | Yes |
+| GET | `/api/orders/<id>` | Get order detail | Yes |
+| POST | `/api/orders/<id>/cancel` | Cancel order | Yes |
 
 **Example: Place Order**
 ```json
@@ -378,7 +355,7 @@ POST /api/orders
 }
 ```
 
-### 👨‍💼 Admin Endpoints (Requires ADMIN role) - 18 endpoints
+### Admin Endpoints (Requires ADMIN role) - 18 endpoints
 
 #### User Management (6 endpoints)
 | Method | Endpoint | Description |
@@ -411,7 +388,7 @@ POST /api/orders
 | PUT | `/api/admin/brands/<id>` | Update brand |
 | DELETE | `/api/admin/brands/<id>` | Delete brand |
 
-#### Order Management (3 endpoints)
+#### Order Management (4 endpoints)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/admin/orders` | List all orders (with filters) |
@@ -419,137 +396,92 @@ POST /api/orders
 | PUT | `/api/admin/orders/<id>/status` | Update order status |
 | DELETE | `/api/admin/orders/<id>` | Delete order |
 
-### 🎨 Frontend View Routes (13 routes)
+### Frontend View Routes (13 routes)
 
 #### Public Routes
 | Route | Description | Auth Required |
 |-------|-------------|---------------|
-| `/` | Homepage with featured products | ❌ |
-| `/products` | Product listing with filters | ❌ |
-| `/products/<id>` | Product detail page | ❌ |
-| `/login` | Login page | ❌ |
-| `/register` | Register page | ❌ |
+| `/` | Homepage with featured products | No |
+| `/products` | Product listing with filters | No |
+| `/products/<id>` | Product detail page | No |
+| `/login` | Login page | No |
+| `/register` | Register page | No |
 
 #### Customer Routes
 | Route | Description | Auth Required |
 |-------|-------------|---------------|
-| `/cart` | Shopping cart | ✅ |
-| `/checkout` | Checkout page | ✅ |
-| `/orders` | My orders | ✅ |
-| `/orders/<id>` | Order detail | ✅ |
+| `/cart` | Shopping cart | Yes |
+| `/checkout` | Checkout page | Yes |
+| `/orders` | My orders | Yes |
+| `/orders/<id>` | Order detail | Yes |
 
 #### Admin Routes
 | Route | Description | Auth Required |
 |-------|-------------|---------------|
-| `/admin` | Admin dashboard with charts | 👨‍💼 ADMIN |
-| `/admin/users` | User management | 👨‍💼 ADMIN |
-| `/admin/products` | Product management | 👨‍💼 ADMIN |
-| `/admin/orders` | Order management | 👨‍💼 ADMIN |
-| `/admin/categories` | Category management | 👨‍💼 ADMIN |
-| `/admin/brands` | Brand management | 👨‍💼 ADMIN |
+| `/admin` | Admin dashboard with charts | ADMIN |
+| `/admin/users` | User management | ADMIN |
+| `/admin/products` | Product management | ADMIN |
+| `/admin/orders` | Order management | ADMIN |
+| `/admin/categories` | Category management | ADMIN |
+| `/admin/brands` | Brand management | ADMIN |
 
 ---
 
-## 🧩 Clean Architecture Layers
+## Clean Architecture Layers
 
-### 🎯 Layer 1: Domain (Core Business Logic)
+### Layer 1: Domain (Core Business Logic)
 
 **Location:** `app/domain/`
 
-The innermost layer containing pure business logic with **zero dependencies**.
+The innermost layer containing pure business logic with zero dependencies.
 
-**Components:**
-- `entities/` - Business entities (User, Product, Order, etc.)
-- `value_objects/` - Immutable concepts (Money, Email, Phone)
-- `enums.py` - Business enumerations (OrderStatus, UserRole, PaymentMethod)
-- `exceptions.py` - Domain-specific exceptions
+**Components:** `entities/` (User, Product, Order, etc.), `value_objects/` (Money, Email, Phone), `enums.py` (OrderStatus, UserRole, PaymentMethod), `exceptions.py` (domain-specific exceptions).
 
-**Rules:**
-- ❌ No imports from outer layers
-- ❌ No framework dependencies
-- ✅ Pure Python classes
-- ✅ Business validation logic only
+**Rules:** No imports from outer layers. No framework dependencies. Pure Python classes. Business validation logic only.
 
-### 🎯 Layer 2: Business (Application Logic)
+### Layer 2: Business (Application Logic)
 
 **Location:** `app/business/`
 
 Contains use cases (application business rules) and defines interfaces.
 
-**Components:**
-- `use_cases/` - Application use cases (RegisterUserUseCase, PlaceOrderUseCase, etc.)
-- `ports/` - Repository interfaces (abstract classes)
-- `dto/` - Data Transfer Objects
+**Components:** `use_cases/`, `ports/` (repository interfaces), `dto/` (Data Transfer Objects).
 
-**Rules:**
-- ✅ Can import from Domain layer
-- ❌ Cannot import from Adapters/Infrastructure
-- ✅ Defines interfaces (ports) for outer layers
-- ✅ Contains orchestration logic
+**Rules:** Can import from Domain layer. Cannot import from Adapters/Infrastructure. Defines interfaces (ports) for outer layers. Contains orchestration logic.
 
 **Use Cases Implemented (33 total):**
-- **Auth (3):** `login_user`, `register_user`, `get_user`
-- **Products (5):** `list_products`, `get_product_detail`, `create_product`, `update_product`, `delete_product`
-- **Cart (3):** `view_cart`, `add_to_cart`, `update_cart_item`, `remove_cart_item`
-- **Orders (7):** `place_order`, `get_my_orders`, `get_order_detail`, `cancel_order`, `list_orders`, `update_order_status`, `create_order_by_admin`, `delete_order`
-- **Admin - Users (5):** `list_users`, `search_users`, `create_user_by_admin`, `update_user_by_admin`, `delete_user`, `change_user_role`
-- **Admin - Catalog (6):** `create_brand`, `update_brand`, `delete_brand`, `create_category`, `update_category`, `delete_category`
-- **Admin - Analytics (1):** `get_dashboard_stats` (with Plotly charts)
+- Auth (3): `login_user`, `register_user`, `get_user`
+- Products (5): `list_products`, `get_product_detail`, `create_product`, `update_product`, `delete_product`
+- Cart (4): `view_cart`, `add_to_cart`, `update_cart_item`, `remove_cart_item`
+- Orders (8): `place_order`, `get_my_orders`, `get_order_detail`, `cancel_order`, `list_orders`, `update_order_status`, `create_order_by_admin`, `delete_order`
+- Admin - Users (6): `list_users`, `search_users`, `create_user_by_admin`, `update_user_by_admin`, `delete_user`, `change_user_role`
+- Admin - Catalog (6): `create_brand`, `update_brand`, `delete_brand`, `create_category`, `update_category`, `delete_category`
+- Admin - Analytics (1): `get_dashboard_stats` (with Plotly charts)
 
-### 🎯 Layer 3: Adapters (Interface Adapters)
+### Layer 3: Adapters (Interface Adapters)
 
 **Location:** `app/adapters/`
 
 Converts data between use cases and external systems.
 
-**Components:**
-- `api/` - HTTP controllers/routes (Flask blueprints)
-- `views/` - Frontend view routes
-- `repositories/` - Repository implementations (implements ports)
-- `presenters/` - Output formatters
+**Repositories Implemented (6):** `UserRepository`, `ProductRepository`, `CategoryRepository`, `BrandRepository`, `CartRepository`, `OrderRepository`.
 
-**Repositories Implemented (6):**
-- `UserRepository` - User CRUD operations
-- `ProductRepository` - Product queries with filters
-- `CategoryRepository` - Category management
-- `BrandRepository` - Brand management
-- `CartRepository` - Shopping cart operations
-- `OrderRepository` - Order management
+**API Blueprints (5):** `auth_bp` (4 endpoints), `product_bp` (2 endpoints), `cart_bp` (4 endpoints), `order_bp` (4 endpoints), `view_bp` (13 routes).
 
-**API Blueprints (5):**
-- `auth_bp` - Authentication routes (4 endpoints)
-- `product_bp` - Product routes (2 endpoints)
-- `cart_bp` - Cart routes (4 endpoints)
-- `order_bp` - Order routes (4 endpoints)
-- `view_bp` - Frontend view routes (13 routes)
-
-### 🎯 Layer 4: Infrastructure (Frameworks & Tools)
+### Layer 4: Infrastructure (Frameworks & Tools)
 
 **Location:** `app/infrastructure/`
 
 Contains all framework and external tool implementations.
 
-**Components:**
-- `database/` - SQLAlchemy models (User, Product, Order, etc.)
-- `config/` - Application configuration
-- `factory.py` - Application factory with dependency injection
-
-**Models (7):**
-- `UserModel` - User accounts
-- `ProductModel` - Products with relationships
-- `CategoryModel` - Product categories
-- `BrandModel` - Product brands
-- `CartItemModel` - Cart items
-- `OrderModel` - Orders with status tracking
-- `OrderItemModel` - Order line items
+**Models (7):** `UserModel`, `ProductModel`, `CategoryModel`, `BrandModel`, `CartItemModel`, `OrderModel`, `OrderItemModel`.
 
 ---
 
-## 🧪 Testing
+## Testing
 
-### Test Coverage: **481/481 Passing (100%)**
+### Test Coverage: 481/481 Passing (100%)
 
-**Test Suite Breakdown:**
 - **Business Logic Tests:** 431 tests (use case unit tests)
 - **Repository Integration Tests:** 50 tests (database operations)
 
@@ -571,18 +503,13 @@ pytest tests/business/use_cases/test_place_order_use_case.py -v
 pytest --cov=app --cov-report=html
 ```
 
-### Run with Coverage
-```bash
-pytest --cov=app --cov-report=html
-```
-
 ### Test Structure
 ```
 tests/
-├── conftest.py              # Fixtures and test configuration
-├── business/                # Business logic unit tests
+├── conftest.py
+├── business/
 │   └── use_cases/          # 431 use case tests
-└── integration/            # Integration tests
+└── integration/
     ├── test_user_repository.py     # 11 tests
     ├── test_product_repository.py  # 11 tests
     ├── test_cart_repository.py     # 14 tests
@@ -594,20 +521,17 @@ tests/
 **Business Logic Test:**
 ```python
 def test_place_order_success():
-    """Test successful order placement"""
     use_case = PlaceOrderUseCase(
         order_repository=Mock(),
         cart_repository=Mock(),
         product_repository=Mock()
     )
-    
     input_data = PlaceOrderInputData(
         user_id=1,
         shipping_address="123 Main St",
         phone_number="+84901234567",
         payment_method="COD"
     )
-    
     output = use_case.execute(input_data)
     assert output.success == True
 ```
@@ -615,31 +539,27 @@ def test_place_order_success():
 **Integration Test:**
 ```python
 def test_save_and_retrieve_order(db_session, sample_order):
-    """Test order persistence"""
     repository = OrderRepositoryAdapter(db_session)
     saved = repository.save(sample_order)
     retrieved = repository.find_by_id(saved.id)
-    
     assert retrieved is not None
     assert retrieved.customer_id == sample_order.customer_id
 ```
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
 **1. Database Migration Error**
 ```bash
-# Reset migrations
 flask db stamp head
 flask db upgrade
 ```
 
 **2. Import Errors**
 ```bash
-# Verify Python path
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
 
@@ -650,26 +570,23 @@ app.run(host='0.0.0.0', port=8000, debug=True)
 ```
 
 **4. SQLAlchemy Warning (MovedIn20Warning)**
-```
-# Non-critical deprecation warning - will be fixed in SQLAlchemy 2.0 migration
-# Does not affect functionality
-```
+Non-critical deprecation warning — does not affect functionality.
 
 ---
 
-## 📖 Project Documentation
+## Project Documentation
 
-Comprehensive documentation available in `materials/` folder:
+Comprehensive documentation available in the `materials/` folder:
 
-- [Clean Architecture Implementation Summary](materials/CLEAN_ARCHITECTURE_IMPLEMENTATION_SUMMARY.md) - Detailed architecture guide
-- [Quick Start Guide](materials/QUICK_START.md) - Fast setup instructions
-- [UI Design Guide](materials/UI_DESIGN_GUIDE.md) - Frontend styling guide
-- [Architecture Overview](materials/architecture.md) - High-level design
-- [Mega Prompt](materials/mega-prompt.md) - Complete architectural blueprint
+- [Clean Architecture Implementation Summary](materials/CLEAN_ARCHITECTURE_IMPLEMENTATION_SUMMARY.md)
+- [Quick Start Guide](materials/QUICK_START.md)
+- [UI Design Guide](materials/UI_DESIGN_GUIDE.md)
+- [Architecture Overview](materials/architecture.md)
+- [Mega Prompt](materials/mega-prompt.md)
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Development
 ```bash
@@ -682,7 +599,7 @@ python run.py  # Runs on http://localhost:5000
 ```bash
 FLASK_ENV=production
 SECRET_KEY=your-super-secure-random-key-here
-DATABASE_URL=postgresql://user:pass@host/db  # For PostgreSQL
+DATABASE_URL=postgresql://user:pass@host/db
 ```
 
 **2. Use Production Server (Gunicorn)**
@@ -693,14 +610,14 @@ gunicorn -w 4 -b 0.0.0.0:5000 run:app
 
 **3. Deploy to Cloud**
 
-**Heroku:**
+Heroku:
 ```bash
 git push heroku main
 heroku run flask db upgrade
 heroku run python scripts/seed_data.py
 ```
 
-**Docker:**
+Docker:
 ```dockerfile
 FROM python:3.11-slim
 WORKDIR /app
@@ -713,7 +630,7 @@ CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "run:app"]
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these guidelines:
 
@@ -741,15 +658,11 @@ Contributions are welcome! Please follow these guidelines:
 
 ---
 
-## 📊 Project Statistics
+## Project Statistics
 
 - **Lines of Code:** ~18,000+ (excluding tests and docs)
 - **Test Coverage:** 481/481 tests passing (100% business logic coverage)
-- **API Endpoints:** 34 REST API endpoints
-  - Authentication: 4 endpoints
-  - Public APIs: 4 endpoints (products, catalog)
-  - Customer APIs: 8 endpoints (cart, orders)
-  - Admin APIs: 18 endpoints (users, products, orders, catalog)
+- **API Endpoints:** 34 REST API endpoints (Authentication: 4, Public APIs: 4, Customer APIs: 8, Admin APIs: 18)
 - **Use Cases:** 33 business operations
 - **Domain Entities:** 6 (User, Product, Order, Cart, Brand, Category)
 - **Value Objects:** 3 (Money, Email, PhoneNumber)
@@ -760,45 +673,23 @@ Contributions are welcome! Please follow these guidelines:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
-**PY-CameraShop Team**
-
-Built with ❤️ following Clean Architecture principles.
+**PY-CameraShop Team** — Built with Clean Architecture principles.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Uncle Bob (Robert C. Martin)** - Clean Architecture pattern
 - **Flask Team** - Excellent web framework
 - **SQLAlchemy Team** - Powerful ORM
 - All contributors and testers
-
----
-
-**⭐ If you find this project helpful, please star it on GitHub!**
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
-
----
-
-## 👨‍💻 Author
-
-**PY-CameraShop Development Team**
-
----
-
-## 🙏 Acknowledgments
-
-- Clean Architecture by Robert C. Martin
-- Flask Framework Documentation
-- SQLAlchemy ORM Documentation
 
 ---
