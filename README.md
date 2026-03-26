@@ -426,19 +426,6 @@ pytest tests/business/use_cases/test_place_order_use_case.py -v
 pytest --cov=app --cov-report=html
 ```
 
-### Test Structure
-```
-tests/
-├── conftest.py
-├── business/
-│   └── use_cases/          # 431 use case tests
-└── integration/
-    ├── test_user_repository.py     # 11 tests
-    ├── test_product_repository.py  # 11 tests
-    ├── test_cart_repository.py     # 14 tests
-    └── test_order_repository.py    # 14 tests
-```
-
 ### Test Examples
 
 **Business Logic Test:**
