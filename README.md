@@ -350,57 +350,6 @@ POST /api/orders
 
 ---
 
-## Clean Architecture Layers
-
-### Layer 1: Domain (Core Business Logic)
-
-**Location:** `app/domain/`
-
-The innermost layer containing pure business logic with zero dependencies.
-
-**Components:** `entities/` (User, Product, Order, etc.), `value_objects/` (Money, Email, Phone), `enums.py` (OrderStatus, UserRole, PaymentMethod), `exceptions.py` (domain-specific exceptions).
-
-**Rules:** No imports from outer layers. No framework dependencies. Pure Python classes. Business validation logic only.
-
-### Layer 2: Business (Application Logic)
-
-**Location:** `app/business/`
-
-Contains use cases (application business rules) and defines interfaces.
-
-**Components:** `use_cases/`, `ports/` (repository interfaces), `dto/` (Data Transfer Objects).
-
-**Rules:** Can import from Domain layer. Cannot import from Adapters/Infrastructure. Defines interfaces (ports) for outer layers. Contains orchestration logic.
-
-**Use Cases Implemented (33 total):**
-- Auth (3): `login_user`, `register_user`, `get_user`
-- Products (5): `list_products`, `get_product_detail`, `create_product`, `update_product`, `delete_product`
-- Cart (4): `view_cart`, `add_to_cart`, `update_cart_item`, `remove_cart_item`
-- Orders (8): `place_order`, `get_my_orders`, `get_order_detail`, `cancel_order`, `list_orders`, `update_order_status`, `create_order_by_admin`, `delete_order`
-- Admin - Users (6): `list_users`, `search_users`, `create_user_by_admin`, `update_user_by_admin`, `delete_user`, `change_user_role`
-- Admin - Catalog (6): `create_brand`, `update_brand`, `delete_brand`, `create_category`, `update_category`, `delete_category`
-- Admin - Analytics (1): `get_dashboard_stats` (with Plotly charts)
-
-### Layer 3: Adapters (Interface Adapters)
-
-**Location:** `app/adapters/`
-
-Converts data between use cases and external systems.
-
-**Repositories Implemented (6):** `UserRepository`, `ProductRepository`, `CategoryRepository`, `BrandRepository`, `CartRepository`, `OrderRepository`.
-
-**API Blueprints (5):** `auth_bp` (4 endpoints), `product_bp` (2 endpoints), `cart_bp` (4 endpoints), `order_bp` (4 endpoints), `view_bp` (13 routes).
-
-### Layer 4: Infrastructure (Frameworks & Tools)
-
-**Location:** `app/infrastructure/`
-
-Contains all framework and external tool implementations.
-
-**Models (7):** `UserModel`, `ProductModel`, `CategoryModel`, `BrandModel`, `CartItemModel`, `OrderModel`, `OrderItemModel`.
-
----
-
 ## Testing
 
 ### Test Coverage: 481/481 Passing (100%)
